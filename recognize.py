@@ -92,10 +92,10 @@ def recognize_faces_with_boxes(image_path, output_path=None, show_debug=True):
             print(f"\n✅ Output saved to: {output_path}")
     
     # Display image
-    print("\n📺 Displaying image (press any key to close)...")
-    cv2.imshow("Face Recognition Results", image_cv)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
+    # print("\n📺 Displaying image (press any key to close)...")
+    # cv2.imshow("Face Recognition Results", image_cv)
+    # cv2.waitKey(0)
+    # cv2.destroyAllWindows()
     
     return len(face_encodings)
 
