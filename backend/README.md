@@ -13,7 +13,7 @@ The backend serves as the inference engine for the face recognition system. It l
 
 ### Prerequisites
 
-- Python 3.10+
+- #### Python 3.10 only
 - Trained model file (`encodings.pkl`) in the backend root directory
 
 ### Installation
