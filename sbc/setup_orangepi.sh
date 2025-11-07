@@ -29,21 +29,8 @@ echo "📦 Installing Python packages (this may take 15-20 hours on Orange Pi On
 pip install --upgrade pip
 pip install -r requirements.txt
 
-# Make scripts executable
-echo "🔧 Making scripts executable..."
-chmod +x run.sh
-chmod +x quick_run.sh
-chmod +x quick_realtime.sh
-chmod +x update.sh
 
 echo ""
 echo "=========================================="
 echo "✅ Setup Complete!"
 echo "=========================================="
-echo ""
-echo "Usage:"
-echo "  ./run.sh              - Interactive menu"
-echo "  ./quick_run.sh        - Quick test image recognition"
-echo "  ./quick_realtime.sh   - Quick camera recognition"
-echo "  ./update.sh           - Update model only"
-echo ""

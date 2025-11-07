@@ -1,4 +1,4 @@
-# Welcome to infineon project
+# Welcome to face recognition model training repo
 
 venv is must, and install all the libraries in requirements.txt
 

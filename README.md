@@ -4,10 +4,10 @@
 
 End-to-end facial recognition stack and control surface in one repo. Train models, serve an API, and ship a Next.js dashboard without juggling multiple projects.
 
-[![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white)](multi-face-rec/requirements.txt)&ensp;
-[![Flask API](https://img.shields.io/badge/Backend-Flask-000000?logo=flask&logoColor=white)](multi-face-rec/api)&ensp;
+[![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white)](backend/requirements.txt)&ensp;
+[![Flask API](https://img.shields.io/badge/Backend-Flask-000000?logo=flask&logoColor=white)](backend/api)&ensp;
 [![Next.js 16](https://img.shields.io/badge/Frontend-Next.js%2016-000000?logo=nextdotjs&logoColor=white)](ix/)&ensp;
-[![Deploy with Docker](https://img.shields.io/badge/Deploy-Docker-2496ED?logo=docker&logoColor=white)](multi-face-rec/Dockerfile)
+[![Deploy with Docker](https://img.shields.io/badge/Deploy-Docker-2496ED?logo=docker&logoColor=white)](backend/Dockerfile)
 
 <h3>
 
@@ -22,17 +22,17 @@ End-to-end facial recognition stack and control surface in one repo. Train model
 
 ## Repo Highlights
 
-- **Two-track monorepo** – `multi-face-rec/` handles model training + inference; `ix/` ships the React 19 dashboard scaffold.
-- **Hardware ready** – Orange Pi client scripts and setup automation bake in camera capture and deployment scripts.
+- **Two-track monorepo** – `backend/` handles model training + inference; `ix/` ships the React 19 dashboard scaffold.
+- **Hardware ready** – Orange Pi client scripts with infinite running capabilities (bash script + systemd service) for continuous monitoring.
 - **API first** – Flask REST service plus CLI utilities for single-shot, health, and continuous recognition.
 - **Frontend friendly** – Modern Next.js (App Router) starter ready to integrate live recognition results.
 
 ## Quick Start
 
-### `multi-face-rec/` (Face Recognition Stack)
+### `backend/` (Face Recognition Stack)
 
 ```bash
-cd multi-face-rec
+cd backend
 python3 -m venv venv
 source venv/bin/activate
 pip install --upgrade pip
@@ -44,22 +44,49 @@ pip install -r requirements.txt
    ```bash
    python train.py
    ```
-3. Boot the API (defaults to `http://localhost:5001`):
+3. Boot the API (defaults to `http://localhost:5000`):
    ```bash
    python api/app.py
    ```
-4. Try the Orange Pi client:
+
+### `sbc/` (Orange Pi Client)
+
+```bash
+cd sbc
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+```
+
+**Single-shot and health checks:**
+```bash
+python orangepi_client.py           # single capture
+python orangepi_client.py health    # ping the API
+python orangepi_client.py continuous 5  # continuous monitoring
+```
+
+**Infinite running (production-ready):**
+
+1. **Bash script with auto-restart** (recommended for testing):
    ```bash
-   python client/orangepi_client.py           # single capture
-   python client/orangepi_client.py health    # ping the API
-   python client/orangepi_client.py continuous 5
+   ./run_continuous.sh 5  # captures every 5 seconds, auto-restarts on crash
+   ```
+
+2. **Systemd service** (recommended for production):
+   ```bash
+   # Edit paths in orangepi-client.service first
+   sudo cp orangepi-client.service /etc/systemd/system/
+   sudo systemctl daemon-reload
+   sudo systemctl enable orangepi-client.service
+   sudo systemctl start orangepi-client.service
+   sudo systemctl status orangepi-client.service  # check status
+   sudo journalctl -u orangepi-client.service -f  # view logs
    ```
 
 **Extras**
-- `recognize.py` – batch test static images and export labeled outputs.
-- `realtime_recognition.py` – OpenCV live window (press `q` to stop).
-- `Dockerfile` – containerized Gunicorn build for Fly, Railway, or bare metal.
-- `setup_orangepi.sh` – one-liner bootstrap for Orange Pi hardware.
+- `setup_orangepi.sh` – one-liner bootstrap for Orange Pi hardware (installs dependencies, creates venv).
+- `run_continuous.sh` – bash script with auto-restart for continuous monitoring.
+- `orangepi-client.service` – systemd service file for production deployment.
 
 ### `ix/` (Next.js Frontend Scaffold)
 
@@ -82,10 +109,14 @@ pnpm dev
 
 | Path | Description |
 | --- | --- |
-| `multi-face-rec/api/` | Flask REST API exposed for recognition and health checks. |
-| `multi-face-rec/client/` | Orange Pi-friendly CLI capture tooling and utilities. |
-| `multi-face-rec/training/` | Expected directory for per-person training images. |
-| `multi-face-rec/realtime_recognition.py` | Local OpenCV streaming demo. |
+| `backend/api/` | Flask REST API exposed for recognition and health checks. |
+| `backend/training/` | Expected directory for per-person training images. |
+| `sbc/` | Orange Pi client scripts with infinite running capabilities. |
+| `sbc/orangepi_client.py` | Python client for capturing and sending images to API. |
+| `sbc/run_continuous.sh` | Bash script with auto-restart for continuous monitoring. |
+| `sbc/orangepi-client.service` | Systemd service file for production deployment. |
+| `sbc/setup_orangepi.sh` | One-liner bootstrap script for Orange Pi hardware setup. |
+| `model-train/` | Model training utilities and scripts. |
 | `ix/` | Next.js 16 (React 19) app scaffold with Tailwind-ready setup. |
 
 ## Docs & Extras

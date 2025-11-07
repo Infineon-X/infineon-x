@@ -5,6 +5,7 @@ import os
 import csv
 
 FOLDER_CSV = "trained_folders.csv"
+ENCODINGS_PATH = os.path.join("..", "deploy", "encodings.pkl")
 
 
 def load_trained_folders(csv_path=FOLDER_CSV):
@@ -29,9 +30,9 @@ def train_faces(incremental=True):
     """Train faces and skip folders (people) already trained before."""
 
     # Load model if exists
-    if incremental and os.path.exists("encodings.pkl"):
+    if incremental and os.path.exists(ENCODINGS_PATH):
         print("Loading existing encodings...")
-        with open("encodings.pkl", "rb") as f:
+        with open(ENCODINGS_PATH, "rb") as f:
             data = pickle.load(f)
             names = data["names"]
             encodings = data["encodings"]
@@ -67,11 +68,15 @@ def train_faces(incremental=True):
         trained_folders.add(person_name)
         print(f"Trained folder '{person_name}' with {len(list(folder.glob('*')))} images.")
 
+    # Ensure the deploy directory exists
+    deploy_dir = os.path.dirname(ENCODINGS_PATH)
+    os.makedirs(deploy_dir, exist_ok=True)
+
     # Save updated encodings
     out = {"names": names, "encodings": encodings}
-    with open("encodings.pkl", "wb") as f:
+    with open(ENCODINGS_PATH, "wb") as f:
         pickle.dump(out, f)
-    print("✅ Updated model saved as encodings.pkl")
+    print(f"✅ Updated model saved as {ENCODINGS_PATH}")
 
     # Save updated trained folder list
     save_trained_folders(trained_folders)
