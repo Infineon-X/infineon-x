@@ -22,12 +22,12 @@ End-to-end facial recognition stack and control surface in one repo. Train model
 
 ## Contributors
 
-- Saba @sabaflz 
-- Kevin @UsingWASD 
+- Saba
+- Kevin 
 - Charles
 - Jay
 - Ansel
-- Inky @enkhbold470 
+- Inky 
 
 
 ## Repo Highlights
