@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import { Camera, X, CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:5000";
 
 // Debug: Log API URL configuration
 console.log("[DEBUG] API Configuration:", {
