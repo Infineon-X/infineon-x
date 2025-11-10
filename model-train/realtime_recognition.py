@@ -3,14 +3,16 @@ import pickle
 import cv2
 import numpy as np
 from datetime import datetime
-
+import os
 
 def realtime_face_recognition():
     """Real-time face recognition from webcam"""
     
     # Load encodings
     print("Loading face encodings...")
-    with open("encodings.pkl", "rb") as f:
+  
+    encodings_path = os.path.join(os.path.dirname(__file__), "..", "backend", "encodings.pkl")
+    with open(encodings_path, "rb") as f:
         loaded_encodings = pickle.load(f)
     
     print(f"Loaded {len(loaded_encodings['encodings'])} encodings")
