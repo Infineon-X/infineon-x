@@ -101,7 +101,7 @@ python orangepi_client.py continuous 5  # continuous monitoring
 ### `ix/` (Next.js Frontend Scaffold)
 
 ```bash
-cd ix
+cd ix-face-enroll
 pnpm install          # swap for npm/yarn if you prefer
 pnpm dev
 ```
