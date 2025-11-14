@@ -1,14 +1,13 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Camera, X, CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
+import { Camera, X, CheckCircle2, AlertCircle, Loader2, Settings } from "lucide-react";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:5001";
+const DEFAULT_API_URL = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:5001";
 
 // Debug: Log API URL configuration
 console.log("[DEBUG] API Configuration:", {
-  NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
-  API_URL,
+  DEFAULT_API_URL,
   isClient: typeof window !== "undefined"
 });
 
@@ -19,6 +18,9 @@ interface CapturedImage {
 }
 
 export default function Home() {
+  const [apiUrl, setApiUrl] = useState<string>(DEFAULT_API_URL);
+  const [showSettings, setShowSettings] = useState(false);
+  const [settingsApiUrl, setSettingsApiUrl] = useState<string>(DEFAULT_API_URL);
   const [name, setName] = useState("");
   const [step, setStep] = useState<"name" | "capture" | "complete">("name");
   const [stream, setStream] = useState<MediaStream | null>(null);
@@ -30,12 +32,24 @@ export default function Home() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
-  // Debug: Log API URL on mount
+  // Load API URL from localStorage on mount
   useEffect(() => {
+    const savedApiUrl = localStorage.getItem("apiUrl");
+    if (savedApiUrl) {
+      setApiUrl(savedApiUrl);
+      setSettingsApiUrl(savedApiUrl);
+    }
     console.log("[DEBUG] Component mounted");
-    console.log("[DEBUG] API_URL:", API_URL);
+    console.log("[DEBUG] DEFAULT_API_URL:", DEFAULT_API_URL);
     console.log("[DEBUG] NEXT_PUBLIC_API_URL env:", process.env.NEXT_PUBLIC_API_URL);
   }, []);
+
+  // Save API URL to localStorage when it changes
+  useEffect(() => {
+    if (apiUrl !== DEFAULT_API_URL) {
+      localStorage.setItem("apiUrl", apiUrl);
+    }
+  }, [apiUrl]);
 
   useEffect(() => {
     console.log("[DEBUG] Stream changed:", { hasStream: !!stream });
@@ -59,13 +73,27 @@ export default function Home() {
     console.log("[DEBUG] State update:", {
       step,
       name,
+      apiUrl,
       capturedImagesCount: capturedImages.length,
       uploadedCount: capturedImages.filter(img => img.uploaded).length,
       isUploading,
       isTraining,
       hasStream: !!stream
     });
-  }, [step, name, capturedImages, isUploading, isTraining, stream]);
+  }, [step, name, apiUrl, capturedImages, isUploading, isTraining, stream]);
+
+  const handleSaveSettings = () => {
+    if (settingsApiUrl.trim()) {
+      setApiUrl(settingsApiUrl.trim());
+      setShowSettings(false);
+      setMessage({ type: "success", text: "API URL updated successfully!" });
+    }
+  };
+
+  const handleOpenSettings = () => {
+    setSettingsApiUrl(apiUrl);
+    setShowSettings(true);
+  };
 
   // Ensure video plays when step changes to capture
   useEffect(() => {
@@ -212,7 +240,7 @@ export default function Home() {
   };
 
   const uploadImage = async (dataUrl: string, id: string) => {
-    console.log("[DEBUG] uploadImage called:", { id, name, API_URL });
+    console.log("[DEBUG] uploadImage called:", { id, name, apiUrl });
     setIsUploading(true);
     
     try {
@@ -249,14 +277,14 @@ export default function Home() {
       const imageBlob = blob.type.startsWith('image/') ? blob : new Blob([blob], { type: 'image/jpeg' });
       formData.append("image", imageBlob, "photo.jpg");
       
-      console.log("[DEBUG] FormData created, sending to:", `${API_URL}/enroll`);
+      console.log("[DEBUG] FormData created, sending to:", `${apiUrl}/enroll`);
       console.log("[DEBUG] FormData entries:", {
         name,
         imageSize: imageBlob.size,
         imageType: imageBlob.type
       });
 
-      const uploadResponse = await fetch(`${API_URL}/enroll`, {
+      const uploadResponse = await fetch(`${apiUrl}/enroll`, {
         method: "POST",
         body: formData,
       });
@@ -303,7 +331,7 @@ export default function Home() {
       console.error("[ERROR] Upload exception:", error);
       const errorMessage = error instanceof Error ? error.message : String(error);
       const detailedError = error instanceof TypeError && error.message.includes('fetch')
-        ? `Network error: ${errorMessage}. Check if backend is running at ${API_URL}`
+        ? `Network error: ${errorMessage}. Check if backend is running at ${apiUrl}`
         : errorMessage;
       
       setMessage({ 
@@ -330,7 +358,7 @@ export default function Home() {
     console.log("[DEBUG] completeEnrollment called:", {
       name,
       imageCount: capturedImages.length,
-      API_URL
+      apiUrl
     });
 
     if (capturedImages.length === 0) {
@@ -350,10 +378,10 @@ export default function Home() {
 
     try {
       const requestBody = { name };
-      console.log("[DEBUG] Sending training request to:", `${API_URL}/train`);
+      console.log("[DEBUG] Sending training request to:", `${apiUrl}/train`);
       console.log("[DEBUG] Request body:", requestBody);
 
-      const response = await fetch(`${API_URL}/train`, {
+      const response = await fetch(`${apiUrl}/train`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -401,7 +429,7 @@ export default function Home() {
       console.error("[ERROR] Training exception:", error);
       const errorMessage = error instanceof Error ? error.message : String(error);
       const detailedError = error instanceof TypeError && error.message.includes('fetch')
-        ? `Network error: ${errorMessage}. Check if backend is running at ${API_URL}`
+        ? `Network error: ${errorMessage}. Check if backend is running at ${apiUrl}`
         : errorMessage;
       
       setMessage({ 
@@ -424,24 +452,92 @@ export default function Home() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black p-4">
-      <main className="flex w-full max-w-4xl flex-col items-center gap-6 bg-white dark:bg-black rounded-lg shadow-lg p-6 sm:p-8">
-        <h1 className="text-3xl font-semibold text-black dark:text-zinc-50">Face Enrollment</h1>
+    <div className="flex min-h-screen items-center justify-center font-sans p-4" style={{ backgroundColor: 'var(--bg-secondary)' }}>
+      <main className="flex w-full max-w-4xl flex-col items-center gap-6 rounded-lg shadow-lg p-6 sm:p-8 relative" style={{ backgroundColor: 'var(--bg-primary)' }}>
+        <button
+          onClick={handleOpenSettings}
+          className="absolute top-4 right-4 p-2 transition-colors"
+          style={{ color: 'var(--text-secondary)' }}
+          onMouseEnter={(e) => e.currentTarget.style.color = 'var(--text-primary)'}
+          onMouseLeave={(e) => e.currentTarget.style.color = 'var(--text-secondary)'}
+          title="Settings"
+        >
+          <Settings className="w-5 h-5" />
+        </button>
+        <h1 className="text-3xl font-semibold" style={{ color: 'var(--text-primary)' }}>Face Enrollment</h1>
+
+        {/* Settings Modal */}
+        {showSettings && (
+          <div className="fixed inset-0 flex items-center justify-center z-50 p-4" style={{ backgroundColor: 'var(--bg-overlay)' }}>
+            <div className="rounded-lg shadow-xl p-6 w-full max-w-md" style={{ backgroundColor: 'var(--bg-primary)' }}>
+              <h2 className="text-xl font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>
+                API Settings
+              </h2>
+              <div className="space-y-4">
+                <div>
+                  <label htmlFor="apiUrl" className="block text-sm font-medium mb-2" style={{ color: 'var(--text-primary)' }}>
+                    API URL
+                  </label>
+                  <input
+                    id="apiUrl"
+                    type="text"
+                    value={settingsApiUrl}
+                    onChange={(e) => setSettingsApiUrl(e.target.value)}
+                    placeholder="http://127.0.0.1:5001"
+                    className="w-full px-4 py-2 rounded-lg focus:outline-none focus:ring-2 transition-colors"
+                    style={{ 
+                      borderColor: 'var(--border-primary)',
+                      backgroundColor: 'var(--bg-primary)',
+                      color: 'var(--text-primary)',
+                      '--tw-ring-color': 'var(--focus-ring)'
+                    } as React.CSSProperties}
+                  />
+                </div>
+                <div className="flex gap-3">
+                  <button
+                    onClick={handleSaveSettings}
+                    className="flex-1 px-4 py-2 rounded-lg font-medium transition-colors"
+                    style={{ 
+                      backgroundColor: 'var(--btn-primary)',
+                      color: 'var(--text-inverse)'
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--btn-primary-hover)'}
+                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'var(--btn-primary)'}
+                  >
+                    Save
+                  </button>
+                  <button
+                    onClick={() => setShowSettings(false)}
+                    className="flex-1 px-4 py-2 rounded-lg font-medium transition-colors border"
+                    style={{ 
+                      borderColor: 'var(--border-primary)',
+                      color: 'var(--text-primary)'
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--bg-tertiary)'}
+                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Debug Info Panel */}
         {process.env.NODE_ENV === 'development' && (
-          <div className="w-full p-3 bg-zinc-100 dark:bg-zinc-900 rounded-lg text-xs font-mono">
-            <div className="font-bold mb-1">Debug Info:</div>
-            <div>API URL: {API_URL}</div>
-            <div>Step: {step}</div>
-            <div>Name: {name || '(empty)'}</div>
-            <div>Images: {capturedImages.length} ({capturedImages.filter(img => img.uploaded).length} uploaded)</div>
-            <div>Uploading: {isUploading ? 'Yes' : 'No'}</div>
-            <div>Training: {isTraining ? 'Yes' : 'No'}</div>
-            <div>Stream: {stream ? 'Active' : 'None'}</div>
-            <div>Video Ready: {isVideoReady ? 'Yes' : 'No'}</div>
+          <div className="w-full p-3 rounded-lg text-xs font-mono" style={{ backgroundColor: 'var(--bg-tertiary)' }}>
+            <div className="font-bold mb-1" style={{ color: 'var(--text-primary)' }}>Debug Info:</div>
+            <div style={{ color: 'var(--text-primary)' }}>API URL: {apiUrl}</div>
+            <div style={{ color: 'var(--text-primary)' }}>Step: {step}</div>
+            <div style={{ color: 'var(--text-primary)' }}>Name: {name || '(empty)'}</div>
+            <div style={{ color: 'var(--text-primary)' }}>Images: {capturedImages.length} ({capturedImages.filter(img => img.uploaded).length} uploaded)</div>
+            <div style={{ color: 'var(--text-primary)' }}>Uploading: {isUploading ? 'Yes' : 'No'}</div>
+            <div style={{ color: 'var(--text-primary)' }}>Training: {isTraining ? 'Yes' : 'No'}</div>
+            <div style={{ color: 'var(--text-primary)' }}>Stream: {stream ? 'Active' : 'None'}</div>
+            <div style={{ color: 'var(--text-primary)' }}>Video Ready: {isVideoReady ? 'Yes' : 'No'}</div>
             {videoRef.current && (
-              <div>
+              <div style={{ color: 'var(--text-primary)' }}>
                 Video Size: {videoRef.current.videoWidth}x{videoRef.current.videoHeight}
                 <br />
                 ReadyState: {videoRef.current.readyState} (0=HAVE_NOTHING, 1=HAVE_METADATA, 2=HAVE_CURRENT_DATA, 3=HAVE_FUTURE_DATA, 4=HAVE_ENOUGH_DATA)
@@ -456,16 +552,16 @@ export default function Home() {
 
         {message && (
           <div
-            className={`w-full flex items-center gap-2 p-4 rounded-lg ${
-              message.type === "success"
-                ? "bg-green-50 dark:bg-green-900/20 text-green-800 dark:text-green-200"
-                : "bg-red-50 dark:bg-red-900/20 text-red-800 dark:text-red-200"
-            }`}
+            className="w-full flex items-center gap-2 p-4 rounded-lg"
+            style={{
+              backgroundColor: message.type === "success" ? 'var(--success-bg)' : 'var(--error-bg)',
+              color: message.type === "success" ? 'var(--success-text)' : 'var(--error-text)'
+            }}
           >
             {message.type === "success" ? (
-              <CheckCircle2 className="w-5 h-5" />
+              <CheckCircle2 className="w-5 h-5" style={{ color: 'var(--success-icon)' }} />
             ) : (
-              <AlertCircle className="w-5 h-5" />
+              <AlertCircle className="w-5 h-5" style={{ color: 'var(--error-icon)' }} />
             )}
             <span>{message.text}</span>
           </div>
@@ -474,7 +570,7 @@ export default function Home() {
         {step === "name" && (
           <div className="w-full flex flex-col gap-4">
             <div>
-              <label htmlFor="name" className="block text-sm font-medium mb-2 text-black dark:text-zinc-50">
+              <label htmlFor="name" className="block text-sm font-medium mb-2" style={{ color: 'var(--text-primary)' }}>
                 Enter your name
               </label>
               <input
@@ -483,13 +579,33 @@ export default function Home() {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="John Doe"
-                className="w-full px-4 py-2 border border-zinc-300 dark:border-zinc-700 rounded-lg bg-white dark:bg-zinc-900 text-black dark:text-zinc-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-2 rounded-lg focus:outline-none focus:ring-2 transition-colors"
+                style={{ 
+                  borderColor: 'var(--border-primary)',
+                  backgroundColor: 'var(--bg-primary)',
+                  color: 'var(--text-primary)',
+                  '--tw-ring-color': 'var(--focus-ring)'
+                } as React.CSSProperties}
               />
             </div>
             <button
               onClick={startCamera}
               disabled={!name.trim()}
-              className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-zinc-400 disabled:cursor-not-allowed text-white rounded-lg font-medium transition-colors"
+              className="w-full flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-medium transition-colors"
+              style={{ 
+                backgroundColor: !name.trim() ? 'var(--btn-disabled)' : 'var(--btn-primary)',
+                color: 'var(--text-inverse)'
+              }}
+              onMouseEnter={(e) => {
+                if (!e.currentTarget.disabled) {
+                  e.currentTarget.style.backgroundColor = 'var(--btn-primary-hover)';
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!e.currentTarget.disabled) {
+                  e.currentTarget.style.backgroundColor = 'var(--btn-primary)';
+                }
+              }}
             >
               <Camera className="w-5 h-5" />
               Start Camera
@@ -499,9 +615,9 @@ export default function Home() {
 
         {step === "capture" && (
           <div className="w-full flex flex-col gap-6">
-            <div className="relative w-full aspect-video bg-zinc-900 rounded-lg overflow-hidden">
+            <div className="relative w-full aspect-video rounded-lg overflow-hidden" style={{ backgroundColor: 'var(--bg-dark-secondary)' }}>
               {!stream && (
-                <div className="absolute inset-0 flex items-center justify-center text-zinc-400">
+                <div className="absolute inset-0 flex items-center justify-center" style={{ color: 'var(--text-muted)' }}>
                   <div className="text-center">
                     <Loader2 className="w-12 h-12 animate-spin mx-auto mb-2" />
                     <p>Initializing camera...</p>
@@ -557,7 +673,21 @@ export default function Home() {
               <button
                 onClick={capturePhoto}
                 disabled={isUploading || !isVideoReady}
-                className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-zinc-400 disabled:cursor-not-allowed text-white rounded-lg font-medium transition-colors"
+                className="flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-medium transition-colors"
+                style={{ 
+                  backgroundColor: (isUploading || !isVideoReady) ? 'var(--btn-disabled)' : 'var(--btn-primary)',
+                  color: 'var(--text-inverse)'
+                }}
+                onMouseEnter={(e) => {
+                  if (!e.currentTarget.disabled) {
+                    e.currentTarget.style.backgroundColor = 'var(--btn-primary-hover)';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!e.currentTarget.disabled) {
+                    e.currentTarget.style.backgroundColor = 'var(--btn-primary)';
+                  }
+                }}
               >
                 {isUploading ? (
                   <>
@@ -573,7 +703,13 @@ export default function Home() {
               </button>
               <button
                 onClick={stopCamera}
-                className="px-6 py-3 border border-zinc-300 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg font-medium transition-colors"
+                className="px-6 py-3 rounded-lg font-medium transition-colors border"
+                style={{ 
+                  borderColor: 'var(--border-primary)',
+                  color: 'var(--text-primary)'
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--bg-tertiary)'}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
               >
                 Stop Camera
               </button>
@@ -581,23 +717,26 @@ export default function Home() {
 
             {capturedImages.length > 0 && (
               <div className="w-full">
-                <h2 className="text-lg font-medium mb-3 text-black dark:text-zinc-50">
+                <h2 className="text-lg font-medium mb-3" style={{ color: 'var(--text-primary)' }}>
                   Captured Photos ({capturedImages.length})
                 </h2>
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
                   {capturedImages.map((img) => (
-                    <div key={img.id} className="relative aspect-square rounded-lg overflow-hidden border-2 border-zinc-300 dark:border-zinc-700">
+                    <div key={img.id} className="relative aspect-square rounded-lg overflow-hidden border-2" style={{ borderColor: 'var(--border-primary)' }}>
                       <img src={img.dataUrl} alt="Captured" className="w-full h-full object-cover" />
                       {img.uploaded && (
-                        <div className="absolute top-2 right-2 bg-green-500 rounded-full p-1">
-                          <CheckCircle2 className="w-4 h-4 text-white" />
+                        <div className="absolute top-2 right-2 rounded-full p-1" style={{ backgroundColor: 'var(--success-icon)' }}>
+                          <CheckCircle2 className="w-4 h-4" style={{ color: 'var(--text-inverse)' }} />
                         </div>
                       )}
                       <button
                         onClick={() => removeImage(img.id)}
-                        className="absolute top-2 left-2 bg-red-500 hover:bg-red-600 rounded-full p-1 transition-colors"
+                        className="absolute top-2 left-2 rounded-full p-1 transition-colors"
+                        style={{ backgroundColor: 'var(--btn-danger)' }}
+                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--btn-danger-hover)'}
+                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'var(--btn-danger)'}
                       >
-                        <X className="w-4 h-4 text-white" />
+                        <X className="w-4 h-4" style={{ color: 'var(--text-inverse)' }} />
                       </button>
                     </div>
                   ))}
@@ -608,7 +747,21 @@ export default function Home() {
             <button
               onClick={completeEnrollment}
               disabled={isTraining || capturedImages.length === 0}
-              className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-green-600 hover:bg-green-700 disabled:bg-zinc-400 disabled:cursor-not-allowed text-white rounded-lg font-medium transition-colors"
+              className="w-full flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-medium transition-colors"
+              style={{ 
+                backgroundColor: (isTraining || capturedImages.length === 0) ? 'var(--btn-disabled)' : 'var(--btn-success)',
+                color: 'var(--text-inverse)'
+              }}
+              onMouseEnter={(e) => {
+                if (!e.currentTarget.disabled) {
+                  e.currentTarget.style.backgroundColor = 'var(--btn-success-hover)';
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!e.currentTarget.disabled) {
+                  e.currentTarget.style.backgroundColor = 'var(--btn-success)';
+                }
+              }}
             >
               {isTraining ? (
                 <>
@@ -627,11 +780,17 @@ export default function Home() {
 
         {step === "complete" && (
           <div className="w-full flex flex-col items-center gap-4">
-            <CheckCircle2 className="w-16 h-16 text-green-500" />
-            <p className="text-lg font-medium text-black dark:text-zinc-50">Enrollment Complete!</p>
+            <CheckCircle2 className="w-16 h-16" style={{ color: 'var(--success-icon)' }} />
+            <p className="text-lg font-medium" style={{ color: 'var(--text-primary)' }}>Enrollment Complete!</p>
             <button
               onClick={resetEnrollment}
-              className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
+              className="px-6 py-3 rounded-lg font-medium transition-colors"
+              style={{ 
+                backgroundColor: 'var(--btn-primary)',
+                color: 'var(--text-inverse)'
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--btn-primary-hover)'}
+              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'var(--btn-primary)'}
             >
               Enroll Another Person
             </button>
