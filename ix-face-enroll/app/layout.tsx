@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Roboto, Roboto_Mono } from "next/font/google";
 import "./globals.css";
+import ServiceWorkerRegistration from "./components/ServiceWorkerRegistration";
 
 const Sans = Roboto({
   variable: "--font-roboto-sans",
@@ -60,6 +61,7 @@ export default function RootLayout({
       <body
         className={`${Sans.variable} ${Mono.variable} antialiased`}
       >
+        <ServiceWorkerRegistration />
         {children}
       </body>
     </html>
