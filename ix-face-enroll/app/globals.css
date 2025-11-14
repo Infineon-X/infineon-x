@@ -3,6 +3,46 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  
+  /* Background colors */
+  --bg-primary: #ffffff;
+  --bg-secondary: #fafafa;
+  --bg-tertiary: #f4f4f5;
+  --bg-dark: #000000;
+  --bg-dark-secondary: #18181b;
+  --bg-dark-tertiary: #27272a;
+  --bg-overlay: rgba(0, 0, 0, 0.5);
+  
+  /* Button colors */
+  --btn-primary: #2563eb;
+  --btn-primary-hover: #1d4ed8;
+  --btn-success: #16a34a;
+  --btn-success-hover: #15803d;
+  --btn-danger: #dc2626;
+  --btn-danger-hover: #b91c1c;
+  --btn-disabled: #a1a1aa;
+  
+  /* Text colors */
+  --text-primary: #000000;
+  --text-secondary: #52525b;
+  --text-tertiary: #71717a;
+  --text-inverse: #ffffff;
+  --text-muted: #a1a1aa;
+  
+  /* Border colors */
+  --border-primary: #d4d4d8;
+  --border-secondary: #3f3f46;
+  
+  /* Status colors */
+  --success-bg: #f0fdf4;
+  --success-text: #166534;
+  --success-icon: #16a34a;
+  --error-bg: #fef2f2;
+  --error-text: #991b1b;
+  --error-icon: #dc2626;
+  
+  /* Focus ring */
+  --focus-ring: #3b82f6;
 }
 
 @theme inline {
@@ -16,6 +56,33 @@
   :root {
     --background: #0a0a0a;
     --foreground: #ededed;
+    
+    /* Background colors */
+    --bg-primary: #000000;
+    --bg-secondary: #18181b;
+    --bg-tertiary: #27272a;
+    --bg-dark: #000000;
+    --bg-dark-secondary: #18181b;
+    --bg-dark-tertiary: #27272a;
+    
+    /* Text colors */
+    --text-primary: #fafafa;
+    --text-secondary: #a1a1aa;
+    --text-tertiary: #71717a;
+    --text-inverse: #ffffff;
+    --text-muted: #52525b;
+    
+    /* Border colors */
+    --border-primary: #3f3f46;
+    --border-secondary: #52525b;
+    
+    /* Status colors */
+    --success-bg: rgba(16, 163, 74, 0.2);
+    --success-text: #86efac;
+    --success-icon: #16a34a;
+    --error-bg: rgba(220, 38, 38, 0.2);
+    --error-text: #fca5a5;
+    --error-icon: #dc2626;
   }
 }
 
@@ -23,4 +90,16 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+button {
+  cursor: pointer;
+}
+
+button:hover:not(:disabled) {
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
 }
