@@ -58,7 +58,7 @@ def capture_and_recognize(max_retries=3, retry_delay=2):
     os.makedirs(test_images_dir, exist_ok=True)
     
     # using camera 2 (change if your cam is different)
-    camera = cv2.VideoCapture(2)
+    camera = cv2.VideoCapture(0)
     
     if not camera.isOpened():
         print("❌ couldn't open the camera :(")
@@ -214,7 +214,7 @@ def check_health():
     else:
         print("❌ API is not available or unhealthy")
 
-def continuous_monitoring(interval=5):
+def continuous_monitoring(interval=15):
     """just keeps capturing every so often until you stop it ctrl+c"""
     
     # Check server connection before starting
@@ -240,7 +240,7 @@ if __name__ == "__main__":
     
     if len(sys.argv) > 1:
         if sys.argv[1] == "continuous":
-            interval = int(sys.argv[2]) if len(sys.argv) > 2 else 5
+            interval = int(sys.argv[2]) if len(sys.argv) > 2 else 15
             continuous_monitoring(interval)
         elif sys.argv[1] == "health":
             check_health()
