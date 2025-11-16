@@ -1,0 +1,25 @@
+#!/bin/bash
+# Pre-compile script to set up CMake environment for dlib compilation
+
+# Find CMake installation
+if [ -d "/layers/digitalocean_apt/apt/usr/share/cmake-3.22" ]; then
+  export CMAKE_ROOT="/layers/digitalocean_apt/apt/usr/share/cmake-3.22"
+elif [ -d "/layers/digitalocean_apt/apt/usr/share/cmake" ]; then
+  export CMAKE_ROOT="/layers/digitalocean_apt/apt/usr/share/cmake"
+fi
+
+# Verify CMake is available
+if command -v cmake &> /dev/null; then
+  echo "CMake found: $(cmake --version | head -n 1)"
+  if [ -n "$CMAKE_ROOT" ]; then
+    echo "CMAKE_ROOT set to: $CMAKE_ROOT"
+  fi
+else
+  echo "Warning: CMake not found in PATH"
+fi
+
+# Ensure library paths are set
+export LD_LIBRARY_PATH="/layers/digitalocean_apt/apt/lib/x86_64-linux-gnu:/layers/digitalocean_apt/apt/lib/i386-linux-gnu:/layers/digitalocean_apt/apt/lib:/layers/digitalocean_apt/apt/usr/lib/x86_64-linux-gnu:/layers/digitalocean_apt/apt/usr/lib/i386-linux-gnu:/layers/digitalocean_apt/apt/usr/lib:$LD_LIBRARY_PATH"
+
+export PKG_CONFIG_PATH="/layers/digitalocean_apt/apt/usr/lib/x86_64-linux-gnu/pkgconfig:/layers/digitalocean_apt/apt/usr/lib/i386-linux-gnu/pkgconfig:/layers/digitalocean_apt/apt/usr/lib/pkgconfig:$PKG_CONFIG_PATH"
+
