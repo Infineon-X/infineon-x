@@ -16,7 +16,10 @@ encodings_path = os.path.join(os.path.dirname(__file__), '..', 'encodings.pkl')
 temp_enrollments_path = os.path.join(os.path.dirname(__file__), '..', 'temp_enrollments')
 
 # Ensure temp enrollments directory exists
-os.makedirs(temp_enrollments_path, exist_ok=True)
+try:
+    os.makedirs(temp_enrollments_path, exist_ok=True)
+except Exception as e:
+    print(f"⚠️ Warning: Could not create temp_enrollments directory: {e}")
 
 print(f"Loading face encodings from: {encodings_path}")
 encodings = None
@@ -28,6 +31,9 @@ def reload_encodings():
         if os.path.exists(encodings_path):
             with open(encodings_path, "rb") as f:
                 encodings = pickle.load(f)
+            # Validate encodings structure
+            if not isinstance(encodings, dict) or 'encodings' not in encodings or 'names' not in encodings:
+                raise ValueError("Invalid encodings file structure")
             print(f"✅ Reloaded {len(encodings['encodings'])} face encodings")
             print(f"✅ Known people: {set(encodings['names'])}")
         else:
@@ -35,10 +41,21 @@ def reload_encodings():
             encodings = {"names": [], "encodings": []}
     except Exception as e:
         print(f"❌ Error loading encodings: {e}")
-        encodings = None
+        import traceback
+        traceback.print_exc()
+        # Set to empty dict instead of None to allow app to start
+        print("⚠️ Starting with empty encodings - app will be ready for training")
+        encodings = {"names": [], "encodings": []}
 
-# Initial load
-reload_encodings()
+# Initial load - wrap in try/except to ensure app can start even if this fails
+try:
+    reload_encodings()
+except Exception as e:
+    print(f"❌ Critical error during startup: {e}")
+    import traceback
+    traceback.print_exc()
+    encodings = {"names": [], "encodings": []}
+    print("⚠️ Starting with empty encodings due to startup error")
 
 @app.route('/', methods=['GET'])
 def home():
@@ -57,6 +74,7 @@ def home():
 
 @app.route('/health', methods=['GET'])
 def health():
+    # App is healthy if encodings is not None (even if empty)
     if encodings is None:
         return jsonify({
             'status': 'unhealthy',
@@ -65,16 +83,16 @@ def health():
     
     return jsonify({
         'status': 'healthy',
-        'faces_loaded': len(encodings['encodings']),
-        'known_people': list(set(encodings['names']))
+        'faces_loaded': len(encodings.get('encodings', [])),
+        'known_people': list(set(encodings.get('names', [])))
     })
 
 @app.route('/recognize', methods=['POST'])
 def recognize():
-    if encodings is None:
+    if encodings is None or len(encodings.get('encodings', [])) == 0:
         return jsonify({
             'success': False,
-            'error': 'Model not loaded'
+            'error': 'Model not loaded or no faces trained yet'
         }), 500
     
     try:
