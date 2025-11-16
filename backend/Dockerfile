@@ -25,8 +25,10 @@ COPY . .
 EXPOSE 8080
 
 # Health check (using urllib from standard library)
-HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-    CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:${PORT:-8080}/health').read()" || exit 1
+# Note: PORT env var is set by DigitalOcean, default to 8080 if not set
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+    CMD python -c "import os, urllib.request; port = os.environ.get('PORT', '8080'); urllib.request.urlopen(f'http://localhost:{port}/health').read()" || exit 1
 
 # Run the Flask app with DigitalOcean-required worker-tmp-dir flag
-CMD gunicorn --worker-tmp-dir /dev/shm --bind 0.0.0.0:${PORT:-8080} --workers 2 --timeout 120 api.app:app
+# Use sh -c to properly handle environment variable substitution
+CMD sh -c 'gunicorn --worker-tmp-dir /dev/shm --bind 0.0.0.0:${PORT:-8080} --workers 2 --timeout 120 api.app:app'
