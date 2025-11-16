@@ -1,7 +1,17 @@
 cmake
+cmake-data
 libopenblas-dev
 liblapack-dev
+libatlas-base-dev
 libgl1-mesa-glx
 libglib2.0-0
 build-essential
+pkg-config
+libx11-dev
+libxext-dev
+libxrender-dev
+libsm6
+libxrandr2
+libfontconfig1
+libice6
 
