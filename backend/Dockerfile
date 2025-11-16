@@ -8,25 +8,19 @@ RUN apt-get update && apt-get install -y \
     cmake \
     libopenblas-dev \
     liblapack-dev \
-    libgl1-mesa-glx \
+    libgl1 \
     libglib2.0-0 \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements and install Python packages
 COPY requirements.txt .
-RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy application files
 COPY . .
 
-# Expose port (DigitalOcean will assign PORT env variable)
-EXPOSE 8080
+# Expose port (Railway will assign the PORT env variable)
+EXPOSE 5000
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-    CMD python -c "import requests; requests.get('http://localhost:${PORT:-8080}/health')" || exit 1
-
-# Run the Flask app with DigitalOcean-required worker-tmp-dir flag
-CMD gunicorn --worker-tmp-dir /dev/shm --bind 0.0.0.0:${PORT:-8080} --workers 2 --timeout 120 api.app:app
-
+# Run the Flask app
+CMD gunicorn -w 2 -b 0.0.0.0:${PORT:-5000} --timeout 120 api.app:app
