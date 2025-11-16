@@ -1,0 +1,15 @@
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+.git/
+*.md
+docs/
+test_images/
+*.pkl.bak
+temp_enrollments/
+
