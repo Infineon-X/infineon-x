@@ -3,20 +3,25 @@
 set -e
 
 APP_DIR="/opt/face-api"
-WORK_DIR="$APP_DIR"
-if [ -d "$APP_DIR/backend" ]; then
-    WORK_DIR="$APP_DIR/backend"
-fi
+WORK_DIR="$APP_DIR/backend"
 
 echo "🔄 Updating Face Recognition API..."
 
+# Pull latest code
 cd $APP_DIR
 git pull
 
+# Update dependencies
 cd $WORK_DIR
-source venv/bin/activate
-pip install -r requirements.txt --quiet
+if [ -f "venv/bin/activate" ]; then
+    source venv/bin/activate
+    pip install -r requirements.txt --quiet
+else
+    echo "⚠️  Virtual environment not found. Run deploy.sh first."
+    exit 1
+fi
 
+# Restart service
 echo "🔄 Restarting service..."
 sudo systemctl restart face-api
 

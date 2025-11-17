@@ -2,11 +2,12 @@
 
 set -e
 
-# Get git repo URL (default to current repo if run from git repo)
-GIT_REPO="${1:-}"
+# Default repo URL
+GIT_REPO="${1:-https://github.com/infineon-x/infineon-x.git}"
 APP_DIR="/opt/face-api"
 
 echo "🚀 Deploying Face Recognition API to Digital Ocean Droplet..."
+echo "📦 Repository: $GIT_REPO"
 
 # Update system
 echo "📦 Updating system packages..."
@@ -19,11 +20,6 @@ sudo apt install -y python3-pip python3-venv git
 sudo apt install -y build-essential cmake libopenblas-dev liblapack-dev libgl1 libglib2.0-0
 
 # Clone or update repository
-if [ -z "$GIT_REPO" ]; then
-    echo "❌ Usage: bash deploy.sh <git-repo-url>"
-    echo "   Example: bash deploy.sh https://github.com/user/repo.git"
-    exit 1
-fi
 
 if [ -d "$APP_DIR/.git" ]; then
     echo "📥 Updating existing repository..."
@@ -37,11 +33,8 @@ else
     git clone $GIT_REPO $APP_DIR
 fi
 
-# Determine working directory (backend folder or root)
-WORK_DIR="$APP_DIR"
-if [ -d "$APP_DIR/backend" ]; then
-    WORK_DIR="$APP_DIR/backend"
-fi
+# Working directory is always backend folder (since code is in backend/)
+WORK_DIR="$APP_DIR/backend"
 
 cd $WORK_DIR
 

@@ -69,8 +69,9 @@ sudo systemctl start face-api
 # SSH into droplet
 ssh user@your-droplet-ip
 
-# Run deployment script with your git repo URL
-bash deploy.sh https://github.com/your-username/your-repo.git
+# Run deployment script (uses default repo, or pass custom URL)
+bash deploy.sh
+# Or: bash deploy.sh https://github.com/infineon-x/infineon-x.git
 ```
 
 ### Update Deployment (After Code Changes)
@@ -79,14 +80,14 @@ bash deploy.sh https://github.com/your-username/your-repo.git
 ssh user@your-droplet-ip
 
 # Run update script (pulls latest code and restarts)
-bash update.sh
+bash /opt/face-api/backend/update.sh
 ```
 
 Or manually:
 ```bash
 cd /opt/face-api
 git pull
-cd backend  # if backend folder exists
+cd backend
 source venv/bin/activate
 pip install -r requirements.txt
 sudo systemctl restart face-api
