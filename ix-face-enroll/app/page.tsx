@@ -173,7 +173,39 @@ export default function Home() {
     setApiTestResult(null);
 
     try {
-      // Try common health check endpoints
+      // Use proxy route for production or if testing the default backend URL
+      const useProxy = process.env.NODE_ENV === 'production' || urlToTest.includes('165.227.17.154');
+      
+      if (useProxy) {
+        // Test via proxy route
+        try {
+          const response = await fetch('/api/health', {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            signal: AbortSignal.timeout(5000),
+          });
+
+          const result = await response.json();
+          setApiTestResult({
+            success: result.success,
+            message: result.message || (result.success ? 'API is reachable via proxy!' : 'API connection failed')
+          });
+          setIsTestingApi(false);
+          return;
+        } catch (error) {
+          const errorMessage = error instanceof Error ? error.message : String(error);
+          setApiTestResult({
+            success: false,
+            message: `Proxy test failed: ${errorMessage}`
+          });
+          setIsTestingApi(false);
+          return;
+        }
+      }
+
+      // Direct connection test (for development/testing other URLs)
       const healthEndpoints = ['/health', '/api/health', '/status'];
       let lastError: Error | null = null;
 
@@ -519,14 +551,18 @@ export default function Home() {
       const imageBlob = blob.type.startsWith('image/') ? blob : new Blob([blob], { type: 'image/jpeg' });
       formData.append("image", imageBlob, "photo.jpg");
       
-      console.log("[DEBUG] FormData created, sending to:", `${apiUrl}/enroll`);
+      // Use proxy route to avoid CORS issues
+      const useProxy = process.env.NODE_ENV === 'production' || apiUrl.includes('165.227.17.154');
+      const enrollUrl = useProxy ? '/api/enroll' : `${apiUrl}/enroll`;
+      
+      console.log("[DEBUG] FormData created, sending to:", enrollUrl);
       console.log("[DEBUG] FormData entries:", {
         name,
         imageSize: imageBlob.size,
         imageType: imageBlob.type
       });
 
-      const uploadResponse = await fetch(`${apiUrl}/enroll`, {
+      const uploadResponse = await fetch(enrollUrl, {
         method: "POST",
         body: formData,
       });
@@ -620,10 +656,14 @@ export default function Home() {
 
     try {
       const requestBody = { name };
-      console.log("[DEBUG] Sending training request to:", `${apiUrl}/train`);
+      // Use proxy route to avoid CORS issues
+      const useProxy = process.env.NODE_ENV === 'production' || apiUrl.includes('165.227.17.154');
+      const trainUrl = useProxy ? '/api/train' : `${apiUrl}/train`;
+      
+      console.log("[DEBUG] Sending training request to:", trainUrl);
       console.log("[DEBUG] Request body:", requestBody);
 
-      const response = await fetch(`${apiUrl}/train`, {
+      const response = await fetch(trainUrl, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
