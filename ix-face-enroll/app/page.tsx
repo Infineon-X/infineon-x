@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Camera, X, CheckCircle2, AlertCircle, Loader2, Settings, RefreshCw } from "lucide-react";
+import { Camera, X, CheckCircle2, AlertCircle, Loader2, Settings, RefreshCw, Wifi, WifiOff } from "lucide-react";
 
 const DEFAULT_API_URL = process.env.NEXT_PUBLIC_API_URL || "http://165.227.17.154:8080";
 
@@ -21,6 +21,8 @@ export default function Home() {
   const [apiUrl, setApiUrl] = useState<string>(DEFAULT_API_URL);
   const [showSettings, setShowSettings] = useState(false);
   const [settingsApiUrl, setSettingsApiUrl] = useState<string>(DEFAULT_API_URL);
+  const [isTestingApi, setIsTestingApi] = useState(false);
+  const [apiTestResult, setApiTestResult] = useState<{ success: boolean; message: string } | null>(null);
   const [name, setName] = useState("");
   const [step, setStep] = useState<"name" | "capture" | "complete">("name");
   const [stream, setStream] = useState<MediaStream | null>(null);
@@ -156,7 +158,100 @@ export default function Home() {
 
   const handleOpenSettings = () => {
     setSettingsApiUrl(apiUrl);
+    setApiTestResult(null);
     setShowSettings(true);
+  };
+
+  const testApiConnection = async () => {
+    const urlToTest = settingsApiUrl.trim() || apiUrl;
+    if (!urlToTest) {
+      setApiTestResult({ success: false, message: "Please enter an API URL" });
+      return;
+    }
+
+    setIsTestingApi(true);
+    setApiTestResult(null);
+
+    try {
+      // Try common health check endpoints
+      const healthEndpoints = ['/health', '/api/health', '/status'];
+      let lastError: Error | null = null;
+
+      for (const endpoint of healthEndpoints) {
+        try {
+          const response = await fetch(`${urlToTest}${endpoint}`, {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            signal: AbortSignal.timeout(5000), // 5 second timeout
+          });
+
+          if (response.ok) {
+            await response.json().catch(() => ({})); // Try to parse JSON, ignore if not JSON
+            setApiTestResult({
+              success: true,
+              message: `API is reachable! Endpoint: ${endpoint} (Status: ${response.status})`
+            });
+            setIsTestingApi(false);
+            return;
+          } else {
+            // If endpoint exists but returns error, still consider it reachable
+            setApiTestResult({
+              success: true,
+              message: `API is reachable! Endpoint: ${endpoint} (Status: ${response.status})`
+            });
+            setIsTestingApi(false);
+            return;
+          }
+        } catch (error) {
+          lastError = error instanceof Error ? error : new Error(String(error));
+          continue;
+        }
+      }
+
+      // If all health endpoints failed, try the base URL
+      try {
+        const response = await fetch(urlToTest, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          signal: AbortSignal.timeout(5000),
+        });
+
+        setApiTestResult({
+          success: true,
+          message: `API is reachable! Base URL responded (Status: ${response.status})`
+        });
+      } catch (error) {
+        const errorMessage = lastError?.message || (error instanceof Error ? error.message : String(error));
+        if (errorMessage.includes('timeout') || errorMessage.includes('AbortError')) {
+          setApiTestResult({
+            success: false,
+            message: `Connection timeout. The API server may be down or unreachable.`
+          });
+        } else if (errorMessage.includes('Failed to fetch') || errorMessage.includes('NetworkError')) {
+          setApiTestResult({
+            success: false,
+            message: `Network error. Check if the API URL is correct and the server is running.`
+          });
+        } else {
+          setApiTestResult({
+            success: false,
+            message: `Connection failed: ${errorMessage}`
+          });
+        }
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      setApiTestResult({
+        success: false,
+        message: `Test failed: ${errorMessage}`
+      });
+    } finally {
+      setIsTestingApi(false);
+    }
   };
 
   // Ensure video plays when step changes to capture
@@ -630,7 +725,10 @@ export default function Home() {
                     id="apiUrl"
                     type="text"
                     value={settingsApiUrl}
-                    onChange={(e) => setSettingsApiUrl(e.target.value)}
+                    onChange={(e) => {
+                      setSettingsApiUrl(e.target.value);
+                      setApiTestResult(null); // Clear test result when URL changes
+                    }}
                     placeholder="http://165.227.17.154:8080"
                     className="w-full px-4 py-2 rounded-lg focus:outline-none focus:ring-2 transition-colors"
                     style={{ 
@@ -641,6 +739,61 @@ export default function Home() {
                     } as React.CSSProperties}
                   />
                 </div>
+
+                {/* API Test Button */}
+                <button
+                  onClick={testApiConnection}
+                  disabled={isTestingApi || !settingsApiUrl.trim()}
+                  className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors border"
+                  style={{ 
+                    borderColor: 'var(--border-primary)',
+                    backgroundColor: isTestingApi || !settingsApiUrl.trim() ? 'var(--bg-tertiary)' : 'var(--bg-primary)',
+                    color: 'var(--text-primary)',
+                    opacity: isTestingApi || !settingsApiUrl.trim() ? 0.6 : 1,
+                    cursor: isTestingApi || !settingsApiUrl.trim() ? 'not-allowed' : 'pointer'
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!e.currentTarget.disabled) {
+                      e.currentTarget.style.backgroundColor = 'var(--bg-tertiary)';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!e.currentTarget.disabled) {
+                      e.currentTarget.style.backgroundColor = 'var(--bg-primary)';
+                    }
+                  }}
+                >
+                  {isTestingApi ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Testing...
+                    </>
+                  ) : (
+                    <>
+                      <Wifi className="w-4 h-4" />
+                      Test API Connection
+                    </>
+                  )}
+                </button>
+
+                {/* API Test Result */}
+                {apiTestResult && (
+                  <div
+                    className="w-full flex items-start gap-2 p-3 rounded-lg text-sm"
+                    style={{
+                      backgroundColor: apiTestResult.success ? 'var(--success-bg)' : 'var(--error-bg)',
+                      color: apiTestResult.success ? 'var(--success-text)' : 'var(--error-text)'
+                    }}
+                  >
+                    {apiTestResult.success ? (
+                      <Wifi className="w-5 h-5 shrink-0 mt-0.5" style={{ color: 'var(--success-icon)' }} />
+                    ) : (
+                      <WifiOff className="w-5 h-5 shrink-0 mt-0.5" style={{ color: 'var(--error-icon)' }} />
+                    )}
+                    <span>{apiTestResult.message}</span>
+                  </div>
+                )}
+
                 <div className="flex gap-3">
                   <button
                     onClick={handleSaveSettings}
