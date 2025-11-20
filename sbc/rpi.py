@@ -128,15 +128,41 @@ def capture_and_recognize(max_retries=3, retry_delay=2):
                         
                         faces = result.get('faces', [])
                         if faces:
+                            recognized_names = []
                             for i, face in enumerate(faces, 1):
+                                name = face.get('name', 'Unknown')
+                                confidence = face.get('confidence', 0)
+                                
                                 print(f"Face #{i}:")
-                                print(f"  Name: {face.get('name', 'Unknown')}")
-                                print(f"  Confidence: {face.get('confidence', 0):.1f}%")
+                                print(f"  Name: {name}")
+                                print(f"  Confidence: {confidence:.1f}%")
                                 
                                 location = face.get('location', {})
                                 if location:
                                     print(f"  Location: ({location.get('left', '?')}, {location.get('top', '?')}) -> ({location.get('right', '?')}, {location.get('bottom', '?')})")
                                 print()
+                                
+                                # Collect recognized names (skip "Unknown")
+                                if name != "Unknown" and confidence >= 50.0:
+                                    recognized_names.append(name)
+                            
+                            # Speak the recognized names
+                            if recognized_names:
+                                # Remove duplicates while preserving order
+                                unique_names = []
+                                for name in recognized_names:
+                                    if name not in unique_names:
+                                        unique_names.append(name)
+                                
+                                if len(unique_names) == 1:
+                                    speech_text = f"I see {unique_names[0]}"
+                                else:
+                                    speech_text = f"I see {', '.join(unique_names[:-1])}, and {unique_names[-1]}"
+                                
+                                print(f"🔊 Speaking: {speech_text}")
+                                speak(speech_text)
+                            else:
+                                print("🔊 No recognized faces to announce")
                         else:
                             print("No faces detected in image")
                         
@@ -252,5 +278,5 @@ if __name__ == "__main__":
         elif sys.argv[1] == "health":
             check_health()
     else:
-        # capture_and_recognize()
-        speak("Hello, how are you?")
+        # Default: start continuous monitoring with 15-second interval
+        continuous_monitoring(15)
