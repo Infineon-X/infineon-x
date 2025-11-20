@@ -1,9 +1,9 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Camera, X, CheckCircle2, AlertCircle, Loader2, Settings } from "lucide-react";
+import { Camera, X, CheckCircle2, AlertCircle, Loader2, Settings, RefreshCw } from "lucide-react";
 
-const DEFAULT_API_URL = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:5001";
+const DEFAULT_API_URL = process.env.NEXT_PUBLIC_API_URL || "http://165.227.17.154:8080";
 
 // Debug: Log API URL configuration
 console.log("[DEBUG] API Configuration:", {
@@ -29,8 +29,44 @@ export default function Home() {
   const [isTraining, setIsTraining] = useState(false);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const [isVideoReady, setIsVideoReady] = useState(false);
+  const [availableCameras, setAvailableCameras] = useState<MediaDeviceInfo[]>([]);
+  const [selectedCameraId, setSelectedCameraId] = useState<string | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  // Enumerate available cameras
+  const enumerateCameras = async () => {
+    try {
+      // Request permission first to get device labels
+      const tempStream = await navigator.mediaDevices.getUserMedia({ video: true });
+      // Stop the temporary stream immediately
+      tempStream.getTracks().forEach(track => track.stop());
+      
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      const videoDevices = devices.filter(device => device.kind === 'videoinput');
+      
+      console.log("[DEBUG] Available cameras:", videoDevices);
+      setAvailableCameras(videoDevices);
+      
+      // Set default camera if none selected
+      if (!selectedCameraId && videoDevices.length > 0) {
+        setSelectedCameraId(videoDevices[0].deviceId);
+      }
+    } catch (error) {
+      console.error("[ERROR] Failed to enumerate cameras:", error);
+      // If permission denied, still try to enumerate (labels will be empty)
+      try {
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        const videoDevices = devices.filter(device => device.kind === 'videoinput');
+        setAvailableCameras(videoDevices);
+        if (!selectedCameraId && videoDevices.length > 0) {
+          setSelectedCameraId(videoDevices[0].deviceId);
+        }
+      } catch (enumError) {
+        console.error("[ERROR] Failed to enumerate devices:", enumError);
+      }
+    }
+  };
 
   // Load API URL from localStorage on mount
   useEffect(() => {
@@ -109,14 +145,25 @@ export default function Home() {
   const startCamera = async () => {
     console.log("[DEBUG] startCamera called");
     try {
+      // Refresh camera list before starting
+      await enumerateCameras();
+      
       console.log("[DEBUG] Requesting camera access...");
-      const mediaStream = await navigator.mediaDevices.getUserMedia({
-        video: { 
-          facingMode: "user",
-          width: { ideal: 1280 },
-          height: { ideal: 720 }
-        },
-      });
+      const constraints: MediaStreamConstraints = {
+        video: selectedCameraId
+          ? {
+              deviceId: { exact: selectedCameraId },
+              width: { ideal: 1280 },
+              height: { ideal: 720 }
+            }
+          : {
+              facingMode: "user",
+              width: { ideal: 1280 },
+              height: { ideal: 720 }
+            },
+      };
+      
+      const mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
       console.log("[DEBUG] Camera access granted:", mediaStream);
       console.log("[DEBUG] Stream tracks:", mediaStream.getTracks().map(t => ({ kind: t.kind, enabled: t.enabled, readyState: t.readyState })));
       
@@ -141,6 +188,20 @@ export default function Home() {
         type: "error", 
         text: `Failed to access camera: ${errorMessage}. Please check permissions.` 
       });
+    }
+  };
+
+  const switchCamera = async (deviceId: string) => {
+    console.log("[DEBUG] switchCamera called:", deviceId);
+    setSelectedCameraId(deviceId);
+    
+    // If camera is already running, restart with new camera
+    if (stream) {
+      stopCamera();
+      // Wait a bit before starting new camera
+      setTimeout(() => {
+        startCamera();
+      }, 200);
     }
   };
 
@@ -483,7 +544,7 @@ export default function Home() {
                     type="text"
                     value={settingsApiUrl}
                     onChange={(e) => setSettingsApiUrl(e.target.value)}
-                    placeholder="http://127.0.0.1:5001"
+                    placeholder="http://165.227.17.154:8080"
                     className="w-full px-4 py-2 rounded-lg focus:outline-none focus:ring-2 transition-colors"
                     style={{ 
                       borderColor: 'var(--border-primary)',
@@ -668,6 +729,48 @@ export default function Home() {
               />
               <canvas ref={canvasRef} className="hidden" />
             </div>
+
+            {/* Camera Selection */}
+            {availableCameras.length > 1 && (
+              <div className="w-full">
+                <label htmlFor="camera-select" className="block text-sm font-medium mb-2" style={{ color: 'var(--text-primary)' }}>
+                  Select Camera
+                </label>
+                <div className="flex gap-2">
+                  <select
+                    id="camera-select"
+                    value={selectedCameraId || ""}
+                    onChange={(e) => switchCamera(e.target.value)}
+                    className="flex-1 px-4 py-2 rounded-lg focus:outline-none focus:ring-2 transition-colors"
+                    style={{ 
+                      borderColor: 'var(--border-primary)',
+                      backgroundColor: 'var(--bg-primary)',
+                      color: 'var(--text-primary)',
+                      '--tw-ring-color': 'var(--focus-ring)'
+                    } as React.CSSProperties}
+                  >
+                    {availableCameras.map((camera) => (
+                      <option key={camera.deviceId} value={camera.deviceId}>
+                        {camera.label || `Camera ${availableCameras.indexOf(camera) + 1}`}
+                      </option>
+                    ))}
+                  </select>
+                  <button
+                    onClick={enumerateCameras}
+                    className="px-4 py-2 rounded-lg font-medium transition-colors border"
+                    style={{ 
+                      borderColor: 'var(--border-primary)',
+                      color: 'var(--text-primary)'
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--bg-tertiary)'}
+                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                    title="Refresh camera list"
+                  >
+                    <RefreshCw className="w-5 h-5" />
+                  </button>
+                </div>
+              </div>
+            )}
 
             <div className="flex gap-4">
               <button
