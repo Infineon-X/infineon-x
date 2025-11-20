@@ -673,30 +673,28 @@ export default function Home() {
         )}
 
         {/* Debug Info Panel */}
-        {process.env.NODE_ENV === 'development' && (
-          <div className="w-full p-3 rounded-lg text-xs font-mono" style={{ backgroundColor: 'var(--bg-tertiary)' }}>
-            <div className="font-bold mb-1" style={{ color: 'var(--text-primary)' }}>Debug Info:</div>
-            <div style={{ color: 'var(--text-primary)' }}>API URL: {apiUrl}</div>
-            <div style={{ color: 'var(--text-primary)' }}>Step: {step}</div>
-            <div style={{ color: 'var(--text-primary)' }}>Name: {name || '(empty)'}</div>
-            <div style={{ color: 'var(--text-primary)' }}>Images: {capturedImages.length} ({capturedImages.filter(img => img.uploaded).length} uploaded)</div>
-            <div style={{ color: 'var(--text-primary)' }}>Uploading: {isUploading ? 'Yes' : 'No'}</div>
-            <div style={{ color: 'var(--text-primary)' }}>Training: {isTraining ? 'Yes' : 'No'}</div>
-            <div style={{ color: 'var(--text-primary)' }}>Stream: {stream ? 'Active' : 'None'}</div>
-            <div style={{ color: 'var(--text-primary)' }}>Video Ready: {isVideoReady ? 'Yes' : 'No'}</div>
-            {videoRef.current && (
-              <div style={{ color: 'var(--text-primary)' }}>
-                Video Size: {videoRef.current.videoWidth}x{videoRef.current.videoHeight}
-                <br />
-                ReadyState: {videoRef.current.readyState} (0=HAVE_NOTHING, 1=HAVE_METADATA, 2=HAVE_CURRENT_DATA, 3=HAVE_FUTURE_DATA, 4=HAVE_ENOUGH_DATA)
-                <br />
-                Paused: {videoRef.current.paused ? 'Yes' : 'No'}
-                <br />
-                Ended: {videoRef.current.ended ? 'Yes' : 'No'}
-              </div>
-            )}
-          </div>
-        )}
+        <div className="w-full p-3 rounded-lg text-xs font-mono" style={{ backgroundColor: 'var(--bg-tertiary)' }}>
+          <div className="font-bold mb-1" style={{ color: 'var(--text-primary)' }}>Debug Info:</div>
+          <div style={{ color: 'var(--text-primary)' }}>API URL: {apiUrl}</div>
+          <div style={{ color: 'var(--text-primary)' }}>Step: {step}</div>
+          <div style={{ color: 'var(--text-primary)' }}>Name: {name || '(empty)'}</div>
+          <div style={{ color: 'var(--text-primary)' }}>Images: {capturedImages.length} ({capturedImages.filter(img => img.uploaded).length} uploaded)</div>
+          <div style={{ color: 'var(--text-primary)' }}>Uploading: {isUploading ? 'Yes' : 'No'}</div>
+          <div style={{ color: 'var(--text-primary)' }}>Training: {isTraining ? 'Yes' : 'No'}</div>
+          <div style={{ color: 'var(--text-primary)' }}>Stream: {stream ? 'Active' : 'None'}</div>
+          <div style={{ color: 'var(--text-primary)' }}>Video Ready: {isVideoReady ? 'Yes' : 'No'}</div>
+          {videoRef.current && (
+            <div style={{ color: 'var(--text-primary)' }}>
+              Video Size: {videoRef.current.videoWidth}x{videoRef.current.videoHeight}
+              <br />
+              ReadyState: {videoRef.current.readyState} (0=HAVE_NOTHING, 1=HAVE_METADATA, 2=HAVE_CURRENT_DATA, 3=HAVE_FUTURE_DATA, 4=HAVE_ENOUGH_DATA)
+              <br />
+              Paused: {videoRef.current.paused ? 'Yes' : 'No'}
+              <br />
+              Ended: {videoRef.current.ended ? 'Yes' : 'No'}
+            </div>
+          )}
+        </div>
 
         {message && (
           <div
@@ -813,7 +811,7 @@ export default function Home() {
 
         {step === "capture" && (
           <div className="w-full flex flex-col gap-6">
-            <div className="relative w-full aspect-video rounded-lg overflow-hidden" style={{ backgroundColor: 'var(--bg-dark-secondary)' }}>
+            <div className="relative w-full rounded-lg overflow-hidden" style={{ backgroundColor: 'var(--bg-dark-secondary)', minHeight: '70vh', height: '70vh' }}>
               {!stream && !isStopping && (
                 <div className="absolute inset-0 flex items-center justify-center" style={{ color: 'var(--text-muted)' }}>
                   <div className="text-center">
