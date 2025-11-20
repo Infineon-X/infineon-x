@@ -5,6 +5,7 @@ import cv2
 import time
 from datetime import datetime
 import os
+import pyttsx3
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -14,6 +15,12 @@ API_URL = os.getenv('API_URL', 'http://127.0.0.1:5001')
 # Create a session for connection pooling and better performance
 session = requests.Session()
 session.headers.update({'User-Agent': 'OrangePi-Client/1.0'})
+
+def speak(text):
+    """speak the text using the system's default speech synthesizer"""
+    engine = pyttsx3.init()
+    engine.say(text)
+    engine.runAndWait() # this line is important to make the speech actually happen
 
 def check_server_connection(max_retries=3, retry_delay=1):
     """Check if server is reachable and healthy"""
@@ -121,15 +128,41 @@ def capture_and_recognize(max_retries=3, retry_delay=2):
                         
                         faces = result.get('faces', [])
                         if faces:
+                            recognized_names = []
                             for i, face in enumerate(faces, 1):
+                                name = face.get('name', 'Unknown')
+                                confidence = face.get('confidence', 0)
+                                
                                 print(f"Face #{i}:")
-                                print(f"  Name: {face.get('name', 'Unknown')}")
-                                print(f"  Confidence: {face.get('confidence', 0):.1f}%")
+                                print(f"  Name: {name}")
+                                print(f"  Confidence: {confidence:.1f}%")
                                 
                                 location = face.get('location', {})
                                 if location:
                                     print(f"  Location: ({location.get('left', '?')}, {location.get('top', '?')}) -> ({location.get('right', '?')}, {location.get('bottom', '?')})")
                                 print()
+                                
+                                # Collect recognized names (skip "Unknown")
+                                if name != "Unknown" and confidence >= 50.0:
+                                    recognized_names.append(name)
+                            
+                            # Speak the recognized names
+                            if recognized_names:
+                                # Remove duplicates while preserving order
+                                unique_names = []
+                                for name in recognized_names:
+                                    if name not in unique_names:
+                                        unique_names.append(name)
+                                
+                                if len(unique_names) == 1:
+                                    speech_text = f"I see {unique_names[0]}"
+                                else:
+                                    speech_text = f"I see {', '.join(unique_names[:-1])}, and {unique_names[-1]}"
+                                
+                                print(f"🔊 Speaking: {speech_text}")
+                                speak(speech_text)
+                            else:
+                                print("🔊 No recognized faces to announce")
                         else:
                             print("No faces detected in image")
                         
@@ -245,4 +278,5 @@ if __name__ == "__main__":
         elif sys.argv[1] == "health":
             check_health()
     else:
-        capture_and_recognize()
+        # Default: start continuous monitoring with 15-second interval
+        continuous_monitoring(15)
