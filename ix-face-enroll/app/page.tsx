@@ -31,6 +31,7 @@ export default function Home() {
   const [isVideoReady, setIsVideoReady] = useState(false);
   const [availableCameras, setAvailableCameras] = useState<MediaDeviceInfo[]>([]);
   const [selectedCameraId, setSelectedCameraId] = useState<string | null>(null);
+  const [isStopping, setIsStopping] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -48,9 +49,12 @@ export default function Home() {
       console.log("[DEBUG] Available cameras:", videoDevices);
       setAvailableCameras(videoDevices);
       
-      // Set default camera if none selected
-      if (!selectedCameraId && videoDevices.length > 0) {
-        setSelectedCameraId(videoDevices[0].deviceId);
+      // Preserve selected camera if it still exists, otherwise set default
+      if (videoDevices.length > 0) {
+        const currentSelectedExists = selectedCameraId && videoDevices.some(device => device.deviceId === selectedCameraId);
+        if (!currentSelectedExists) {
+          setSelectedCameraId(videoDevices[0].deviceId);
+        }
       }
     } catch (error) {
       console.error("[ERROR] Failed to enumerate cameras:", error);
@@ -59,8 +63,13 @@ export default function Home() {
         const devices = await navigator.mediaDevices.enumerateDevices();
         const videoDevices = devices.filter(device => device.kind === 'videoinput');
         setAvailableCameras(videoDevices);
-        if (!selectedCameraId && videoDevices.length > 0) {
-          setSelectedCameraId(videoDevices[0].deviceId);
+        
+        // Preserve selected camera if it still exists, otherwise set default
+        if (videoDevices.length > 0) {
+          const currentSelectedExists = selectedCameraId && videoDevices.some(device => device.deviceId === selectedCameraId);
+          if (!currentSelectedExists) {
+            setSelectedCameraId(videoDevices[0].deviceId);
+          }
         }
       } catch (enumError) {
         console.error("[ERROR] Failed to enumerate devices:", enumError);
@@ -88,13 +97,32 @@ export default function Home() {
   }, [apiUrl]);
 
   useEffect(() => {
-    console.log("[DEBUG] Stream changed:", { hasStream: !!stream });
-    if (stream && videoRef.current) {
+    console.log("[DEBUG] Stream changed:", { hasStream: !!stream, isStopping });
+    if (stream && videoRef.current && !isStopping) {
       console.log("[DEBUG] Setting video srcObject and playing");
-      videoRef.current.srcObject = stream;
-      videoRef.current.play().catch((error) => {
-        console.error("[ERROR] Failed to play video:", error);
-      });
+      // Clear any existing srcObject first to avoid play() interruption
+      if (videoRef.current.srcObject) {
+        const oldStream = videoRef.current.srcObject as MediaStream;
+        oldStream.getTracks().forEach(track => track.stop());
+        videoRef.current.srcObject = null;
+      }
+      
+      // Small delay to ensure cleanup is complete
+      setTimeout(() => {
+        if (videoRef.current && stream) {
+          videoRef.current.srcObject = stream;
+          videoRef.current.play().catch((error) => {
+            // Ignore AbortError which happens when switching cameras
+            if (error.name !== 'AbortError') {
+              console.error("[ERROR] Failed to play video:", error);
+            }
+          });
+        }
+      }, 50);
+    } else if (!stream && videoRef.current && !isStopping) {
+      // Only clear if we're not intentionally stopping
+      videoRef.current.srcObject = null;
+      videoRef.current.pause();
     }
     return () => {
       if (stream) {
@@ -102,7 +130,7 @@ export default function Home() {
         stream.getTracks().forEach((track) => track.stop());
       }
     };
-  }, [stream]);
+  }, [stream, isStopping]);
 
   // Debug: Log state changes
   useEffect(() => {
@@ -142,17 +170,21 @@ export default function Home() {
     }
   }, [step, stream]);
 
-  const startCamera = async () => {
-    console.log("[DEBUG] startCamera called");
+  const startCamera = async (deviceId?: string) => {
+    console.log("[DEBUG] startCamera called", { deviceId, selectedCameraId });
     try {
-      // Refresh camera list before starting
-      await enumerateCameras();
+      // Refresh camera list before starting if we don't have cameras yet
+      if (availableCameras.length === 0) {
+        await enumerateCameras();
+      }
       
-      console.log("[DEBUG] Requesting camera access...");
+      const cameraToUse = deviceId || selectedCameraId;
+      console.log("[DEBUG] Requesting camera access with device:", cameraToUse);
+      
       const constraints: MediaStreamConstraints = {
-        video: selectedCameraId
+        video: cameraToUse
           ? {
-              deviceId: { exact: selectedCameraId },
+              deviceId: { exact: cameraToUse },
               width: { ideal: 1280 },
               height: { ideal: 720 }
             }
@@ -193,32 +225,86 @@ export default function Home() {
 
   const switchCamera = async (deviceId: string) => {
     console.log("[DEBUG] switchCamera called:", deviceId);
+    
+    // Update selected camera immediately
     setSelectedCameraId(deviceId);
     
-    // If camera is already running, restart with new camera
+    // If camera is already running, switch immediately
     if (stream) {
-      stopCamera();
-      // Wait a bit before starting new camera
-      setTimeout(() => {
-        startCamera();
-      }, 200);
+      setIsStopping(true);
+      setIsVideoReady(false);
+      
+      // Stop current stream immediately
+      const currentStream = stream;
+      if (videoRef.current) {
+        const currentSrcObject = videoRef.current.srcObject as MediaStream | null;
+        if (currentSrcObject) {
+          currentSrcObject.getTracks().forEach(track => track.stop());
+        }
+        videoRef.current.srcObject = null;
+        videoRef.current.pause();
+      }
+      currentStream.getTracks().forEach((track) => track.stop());
+      setStream(null);
+      
+      // Small delay to ensure cleanup is complete before starting new stream
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      // Start new camera
+      try {
+        const constraints: MediaStreamConstraints = {
+          video: {
+            deviceId: { exact: deviceId },
+            width: { ideal: 1280 },
+            height: { ideal: 720 }
+          },
+        };
+        
+        const newStream = await navigator.mediaDevices.getUserMedia(constraints);
+        setIsStopping(false);
+        setStream(newStream);
+        
+        // Video will be set up by the useEffect hook
+      } catch (error) {
+        setIsStopping(false);
+        console.error("[ERROR] Failed to switch camera:", error);
+        const errorMessage = error instanceof Error ? error.message : "Unknown error";
+        setMessage({ 
+          type: "error", 
+          text: `Failed to switch camera: ${errorMessage}` 
+        });
+      }
     }
   };
 
   const stopCamera = () => {
     console.log("[DEBUG] stopCamera called");
+    setIsStopping(true);
+    
+    // Immediately clear video element first for instant UI feedback
+    if (videoRef.current) {
+      const currentSrcObject = videoRef.current.srcObject as MediaStream | null;
+      if (currentSrcObject) {
+        currentSrcObject.getTracks().forEach(track => track.stop());
+      }
+      videoRef.current.srcObject = null;
+      videoRef.current.pause();
+    }
+    
+    // Stop all tracks synchronously
     if (stream) {
-      console.log("[DEBUG] Stopping stream tracks:", stream.getTracks().length);
       stream.getTracks().forEach((track) => {
         track.stop();
-        console.log("[DEBUG] Stopped track:", track.kind);
       });
-      setStream(null);
     }
-    if (videoRef.current) {
-      videoRef.current.srcObject = null;
-      console.log("[DEBUG] Video element cleared");
-    }
+    
+    setStream(null);
+    setIsVideoReady(false);
+    
+    // Reset stopping flag after a brief moment
+    setTimeout(() => {
+      setIsStopping(false);
+    }, 100);
   };
 
   const capturePhoto = () => {
@@ -509,6 +595,7 @@ export default function Home() {
     setStep("name");
     setCapturedImages([]);
     setMessage(null);
+    setIsVideoReady(false);
     stopCamera();
   };
 
@@ -649,8 +736,58 @@ export default function Home() {
                 } as React.CSSProperties}
               />
             </div>
+            
+            {/* Camera Selection - Show before starting */}
+            {availableCameras.length > 1 && (
+              <div>
+                <label htmlFor="camera-select-name" className="block text-sm font-medium mb-2" style={{ color: 'var(--text-primary)' }}>
+                  Select Camera
+                </label>
+                <div className="flex gap-2">
+                  <select
+                    id="camera-select-name"
+                    value={selectedCameraId || ""}
+                    onChange={(e) => setSelectedCameraId(e.target.value)}
+                    className="flex-1 px-4 py-2 rounded-lg focus:outline-none focus:ring-2 transition-colors"
+                    style={{ 
+                      borderColor: 'var(--border-primary)',
+                      backgroundColor: 'var(--bg-primary)',
+                      color: 'var(--text-primary)',
+                      '--tw-ring-color': 'var(--focus-ring)'
+                    } as React.CSSProperties}
+                  >
+                    {availableCameras.map((camera) => (
+                      <option key={camera.deviceId} value={camera.deviceId}>
+                        {camera.label || `Camera ${availableCameras.indexOf(camera) + 1}`}
+                      </option>
+                    ))}
+                  </select>
+                  <button
+                    onClick={enumerateCameras}
+                    className="px-4 py-2 rounded-lg font-medium transition-colors border"
+                    style={{ 
+                      borderColor: 'var(--border-primary)',
+                      color: 'var(--text-primary)'
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--bg-tertiary)'}
+                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                    title="Refresh camera list"
+                  >
+                    <RefreshCw className="w-5 h-5" />
+                  </button>
+                </div>
+              </div>
+            )}
+            
             <button
-              onClick={startCamera}
+              onClick={() => {
+                // Enumerate cameras first if not done yet, then start
+                if (availableCameras.length === 0) {
+                  enumerateCameras().then(() => startCamera());
+                } else {
+                  startCamera();
+                }
+              }}
               disabled={!name.trim()}
               className="w-full flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-medium transition-colors"
               style={{ 
@@ -677,7 +814,7 @@ export default function Home() {
         {step === "capture" && (
           <div className="w-full flex flex-col gap-6">
             <div className="relative w-full aspect-video rounded-lg overflow-hidden" style={{ backgroundColor: 'var(--bg-dark-secondary)' }}>
-              {!stream && (
+              {!stream && !isStopping && (
                 <div className="absolute inset-0 flex items-center justify-center" style={{ color: 'var(--text-muted)' }}>
                   <div className="text-center">
                     <Loader2 className="w-12 h-12 animate-spin mx-auto mb-2" />
