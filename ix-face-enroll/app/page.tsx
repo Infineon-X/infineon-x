@@ -866,7 +866,7 @@ export default function Home() {
         )}
 
         {/* Debug Info Panel */}
-        <div className="w-full p-3 rounded-lg text-xs font-mono" style={{ backgroundColor: 'var(--bg-tertiary)' }}>
+        {/* <div className="w-full p-3 rounded-lg text-xs font-mono" style={{ backgroundColor: 'var(--bg-tertiary)' }}>
           <div className="font-bold mb-1" style={{ color: 'var(--text-primary)' }}>Debug Info:</div>
           <div style={{ color: 'var(--text-primary)' }}>API URL: {apiUrl}</div>
           <div style={{ color: 'var(--text-primary)' }}>Step: {step}</div>
@@ -887,7 +887,7 @@ export default function Home() {
               Ended: {videoRef.current.ended ? 'Yes' : 'No'}
             </div>
           )}
-        </div>
+        </div> */}
 
         {message && (
           <div
