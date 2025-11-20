@@ -5,6 +5,7 @@ import cv2
 import time
 from datetime import datetime
 import os
+import pyttsx3
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -14,6 +15,12 @@ API_URL = os.getenv('API_URL', 'http://127.0.0.1:5001')
 # Create a session for connection pooling and better performance
 session = requests.Session()
 session.headers.update({'User-Agent': 'OrangePi-Client/1.0'})
+
+def speak(text):
+    """speak the text using the system's default speech synthesizer"""
+    engine = pyttsx3.init()
+    engine.say(text)
+    engine.runAndWait()
 
 def check_server_connection(max_retries=3, retry_delay=1):
     """Check if server is reachable and healthy"""
@@ -245,4 +252,5 @@ if __name__ == "__main__":
         elif sys.argv[1] == "health":
             check_health()
     else:
-        capture_and_recognize()
+        # capture_and_recognize()
+        speak("Hello, how are you?")
