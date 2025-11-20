@@ -20,7 +20,7 @@ def speak(text):
     """speak the text using the system's default speech synthesizer"""
     engine = pyttsx3.init()
     engine.say(text)
-    engine.runAndWait()
+    engine.runAndWait() # this line is important to make the speech actually happen
 
 def check_server_connection(max_retries=3, retry_delay=1):
     """Check if server is reachable and healthy"""
