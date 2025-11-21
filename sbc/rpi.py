@@ -6,6 +6,8 @@ from datetime import datetime
 import os
 import sys
 import pyttsx3
+import subprocess
+import shutil
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -26,6 +28,31 @@ try:
 except ImportError as e:
     OPENCV_AVAILABLE = False
     OPENCV_ERROR = str(e)
+
+# Check if libcamera-still is available (command-line tool)
+LIBCAMERA_STILL_AVAILABLE = shutil.which('libcamera-still') is not None
+
+# Check if we're in a venv
+IN_VENV = hasattr(sys, 'real_prefix') or (hasattr(sys, 'base_prefix') and sys.base_prefix != sys.prefix)
+
+# Try to find system Python (for picamera2 when running in venv)
+SYSTEM_PYTHON = None
+if IN_VENV and not PICAMERA2_AVAILABLE:
+    # Try common system Python paths
+    for python_path in ['/usr/bin/python3', '/usr/bin/python3.11', '/usr/bin/python3.12', '/usr/bin/python3.13']:
+        if os.path.exists(python_path):
+            # Test if this Python has picamera2
+            try:
+                result = subprocess.run(
+                    [python_path, '-c', 'from picamera2 import Picamera2'],
+                    capture_output=True,
+                    timeout=2
+                )
+                if result.returncode == 0:
+                    SYSTEM_PYTHON = python_path
+                    break
+            except:
+                pass
 
 def print_camera_status():
     """Print diagnostic information about available camera libraries"""
@@ -48,12 +75,23 @@ def print_camera_status():
         if OPENCV_ERROR:
             print(f"   Error: {OPENCV_ERROR}")
     
+    if LIBCAMERA_STILL_AVAILABLE:
+        print("✅ libcamera-still: Available (command-line fallback)")
+    else:
+        print("⚠️  libcamera-still: Not available")
+        print("   Install with: sudo apt install libcamera-apps")
+    
     # Check if running in venv
-    in_venv = hasattr(sys, 'real_prefix') or (hasattr(sys, 'base_prefix') and sys.base_prefix != sys.prefix)
-    if in_venv:
+    if IN_VENV:
         print("\n⚠️  Running in virtual environment")
-        print("   Note: picamera2 must be installed system-wide (not in venv)")
-        print("   Run: sudo apt install python3-picamera2")
+        if not PICAMERA2_AVAILABLE:
+            if SYSTEM_PYTHON:
+                print(f"✅ System Python fallback: {SYSTEM_PYTHON} (has picamera2)")
+            else:
+                print("   Note: picamera2 must be installed system-wide (not in venv)")
+                print("   Run: sudo apt install python3-picamera2")
+        else:
+            print("   Note: picamera2 is available in venv")
     
     print("="*50 + "\n")
 
@@ -134,13 +172,112 @@ def capture_and_recognize(max_retries=3, retry_delay=2):
             print(f"💾 saved image: {image_path}")
             print("✅ saved the photo")
             capture_success = True
+        except ImportError as e:
+            print(f"⚠️ picamera2 not available: {e}")
+            if SYSTEM_PYTHON:
+                print("🔄 Falling back to system Python with picamera2...")
+            elif LIBCAMERA_STILL_AVAILABLE:
+                print("🔄 Falling back to libcamera-still...")
+            elif OPENCV_AVAILABLE:
+                print("🔄 Falling back to OpenCV...")
         except Exception as e:
             print(f"⚠️ picamera2 failed: {e}")
             import traceback
-            print(f"   Full error: {traceback.format_exc()}")
-            print("🔄 Falling back to OpenCV...")
+            error_details = traceback.format_exc()
+            # Only show full traceback if it's not a common camera access error
+            if "Camera" in str(e) or "camera" in str(e).lower():
+                print(f"   Error: {e}")
+            else:
+                print(f"   Full error: {error_details}")
+            # Don't fall back to OpenCV immediately - try system Python or libcamera-still first
+            if SYSTEM_PYTHON:
+                print("🔄 Falling back to system Python with picamera2...")
+            elif LIBCAMERA_STILL_AVAILABLE:
+                print("🔄 Falling back to libcamera-still...")
+            elif OPENCV_AVAILABLE:
+                print("🔄 Falling back to OpenCV...")
     
-    # Fallback to OpenCV if picamera2 not available or failed
+    # Fallback: Try using system Python for picamera2 if we're in venv
+    if not capture_success and SYSTEM_PYTHON:
+        try:
+            print("📷 Using picamera2 via system Python...")
+            # Create a temporary Python script to capture with picamera2
+            import tempfile
+            with tempfile.NamedTemporaryFile(mode='w', suffix='.py', delete=False) as script_file:
+                script_content = f'''#!/usr/bin/env python3
+from picamera2 import Picamera2
+import time
+import sys
+
+picam2 = Picamera2()
+config = picam2.create_still_configuration()
+picam2.configure(config)
+picam2.start()
+time.sleep(1.0)
+picam2.capture_file(sys.argv[1])
+picam2.stop()
+'''
+                script_file.write(script_content)
+                script_path = script_file.name
+            
+            # Make script executable
+            os.chmod(script_path, 0o755)
+            
+            # Run the script with system Python
+            result = subprocess.run(
+                [SYSTEM_PYTHON, script_path, image_path],
+                capture_output=True,
+                text=True,
+                timeout=10
+            )
+            
+            # Clean up script
+            try:
+                os.remove(script_path)
+            except:
+                pass
+            
+            if result.returncode == 0 and os.path.exists(image_path):
+                print(f"💾 saved image: {image_path}")
+                print("✅ saved the photo")
+                capture_success = True
+            else:
+                print(f"⚠️ System Python picamera2 failed: {result.stderr}")
+        except subprocess.TimeoutExpired:
+            print("⚠️ System Python picamera2 timed out")
+        except Exception as e:
+            print(f"⚠️ System Python picamera2 error: {e}")
+    
+    # Fallback to libcamera-still command-line tool if picamera2 failed
+    if not capture_success and LIBCAMERA_STILL_AVAILABLE:
+        try:
+            print("📷 Using libcamera-still (command-line)...")
+            # Use libcamera-still to capture image
+            result = subprocess.run(
+                [
+                    'libcamera-still',
+                    '--output', image_path,
+                    '--timeout', '1000',  # 1 second timeout
+                    '--nopreview',
+                    '--immediate',  # Don't wait for preview
+                ],
+                capture_output=True,
+                text=True,
+                timeout=5
+            )
+            
+            if result.returncode == 0 and os.path.exists(image_path):
+                print(f"💾 saved image: {image_path}")
+                print("✅ saved the photo")
+                capture_success = True
+            else:
+                print(f"⚠️ libcamera-still failed: {result.stderr}")
+        except subprocess.TimeoutExpired:
+            print("⚠️ libcamera-still timed out")
+        except Exception as e:
+            print(f"⚠️ libcamera-still error: {e}")
+    
+    # Fallback to OpenCV if picamera2 and libcamera-still both failed
     if not capture_success:
         if not OPENCV_AVAILABLE:
             print("❌ Neither picamera2 nor OpenCV available. Please install one:")
@@ -167,11 +304,14 @@ def capture_and_recognize(max_retries=3, retry_delay=2):
                     test_camera.release()
             
             if camera is None:
-                print("❌ couldn't open any camera device")
+                print("❌ couldn't open any camera device with OpenCV")
+                print("   This is expected on Raspberry Pi systems using libcamera")
                 print("   Troubleshooting:")
                 print("   1. Check camera connection: dmesg | grep camera")
                 print("   2. Test with libcamera: libcamera-hello")
                 print("   3. Install picamera2: sudo apt install python3-picamera2")
+                print("   4. Install libcamera-apps: sudo apt install libcamera-apps")
+                print("   5. Ensure you're in the video group: sudo usermod -a -G video $USER")
                 return None
             
             # letting the camera warm up a bit
