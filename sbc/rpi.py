@@ -279,4 +279,4 @@ if __name__ == "__main__":
             check_health()
     else:
         # Default: start continuous monitoring with 15-second interval
-        continuous_monitoring(15)
+        continuous_monitoring(2)
