@@ -43,6 +43,7 @@ The `rpi.py` script automatically detects and uses the best available camera lib
 
 1. **picamera2** (recommended for Raspberry Pi OS Bullseye+): Uses `libcamera` directly
    - Install: `sudo apt install python3-picamera2`
+   - **Important**: Must be installed system-wide (not in virtual environment)
    - Automatically used if available
 
 2. **OpenCV** (fallback): Uses V4L2 interface
@@ -50,6 +51,38 @@ The `rpi.py` script automatically detects and uses the best available camera lib
    - Used if `picamera2` is not available
 
 The script will try `picamera2` first, then fall back to OpenCV if needed. This ensures compatibility with both newer and older Raspberry Pi OS versions.
+
+### Troubleshooting Camera Issues
+
+If you see "❌ couldn't grab an image from the camera":
+
+1. **Check camera library status**:
+   ```bash
+   python3 rpi.py camera-status
+   ```
+
+2. **Install picamera2** (if not installed):
+   ```bash
+   sudo apt install python3-picamera2
+   ```
+   **Note**: If you're using a virtual environment, picamera2 must be installed system-wide. You may need to run the script outside the venv or install it system-wide.
+
+3. **Test camera with libcamera**:
+   ```bash
+   libcamera-hello
+   libcamera-still -o test.jpg
+   ```
+
+4. **Check camera detection**:
+   ```bash
+   dmesg | grep camera
+   ```
+
+5. **If using virtual environment**: Try running outside venv:
+   ```bash
+   deactivate  # exit venv
+   python3 rpi.py
+   ```
 
 ---
 

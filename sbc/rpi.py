@@ -4,6 +4,7 @@ import requests
 import time
 from datetime import datetime
 import os
+import sys
 import pyttsx3
 from dotenv import load_dotenv
 load_dotenv()
@@ -12,15 +13,49 @@ load_dotenv()
 try:
     from picamera2 import Picamera2
     PICAMERA2_AVAILABLE = True
-except ImportError:
+    PICAMERA2_ERROR = None
+except ImportError as e:
     PICAMERA2_AVAILABLE = False
+    PICAMERA2_ERROR = str(e)
 
 # Try to import OpenCV (fallback for older systems or non-Pi devices)
 try:
     import cv2
     OPENCV_AVAILABLE = True
-except ImportError:
+    OPENCV_ERROR = None
+except ImportError as e:
     OPENCV_AVAILABLE = False
+    OPENCV_ERROR = str(e)
+
+def print_camera_status():
+    """Print diagnostic information about available camera libraries"""
+    print("\n" + "="*50)
+    print("📷 Camera Library Status")
+    print("="*50)
+    
+    if PICAMERA2_AVAILABLE:
+        print("✅ picamera2: Available (recommended for Raspberry Pi OS Bullseye+)")
+    else:
+        print("❌ picamera2: Not available")
+        if PICAMERA2_ERROR:
+            print(f"   Error: {PICAMERA2_ERROR}")
+        print("   Install with: sudo apt install python3-picamera2")
+    
+    if OPENCV_AVAILABLE:
+        print("✅ OpenCV: Available")
+    else:
+        print("❌ OpenCV: Not available")
+        if OPENCV_ERROR:
+            print(f"   Error: {OPENCV_ERROR}")
+    
+    # Check if running in venv
+    in_venv = hasattr(sys, 'real_prefix') or (hasattr(sys, 'base_prefix') and sys.base_prefix != sys.prefix)
+    if in_venv:
+        print("\n⚠️  Running in virtual environment")
+        print("   Note: picamera2 must be installed system-wide (not in venv)")
+        print("   Run: sudo apt install python3-picamera2")
+    
+    print("="*50 + "\n")
 
 # grab the api url from env or just use localhost
 API_URL = os.getenv('API_URL', 'http://127.0.0.1:5001')
@@ -87,9 +122,12 @@ def capture_and_recognize(max_retries=3, retry_delay=2):
         try:
             print("📷 Using picamera2 (libcamera)...")
             picam2 = Picamera2()
+            # Configure camera for still capture
+            config = picam2.create_still_configuration()
+            picam2.configure(config)
             picam2.start()
             # Let camera warm up
-            time.sleep(0.5)
+            time.sleep(1.0)  # Increased warm-up time for better reliability
             # Capture image
             picam2.capture_file(image_path)
             picam2.stop()
@@ -98,6 +136,8 @@ def capture_and_recognize(max_retries=3, retry_delay=2):
             capture_success = True
         except Exception as e:
             print(f"⚠️ picamera2 failed: {e}")
+            import traceback
+            print(f"   Full error: {traceback.format_exc()}")
             print("🔄 Falling back to OpenCV...")
     
     # Fallback to OpenCV if picamera2 not available or failed
@@ -110,22 +150,40 @@ def capture_and_recognize(max_retries=3, retry_delay=2):
         
         try:
             print("📷 Using OpenCV...")
-            # using camera 0 (change if your cam is different)
-            camera = cv2.VideoCapture(0)
+            # Try different camera indices
+            camera = None
+            for camera_idx in [0, 1, 2]:
+                print(f"   Trying camera index {camera_idx}...")
+                test_camera = cv2.VideoCapture(camera_idx)
+                if test_camera.isOpened():
+                    ret, frame = test_camera.read()
+                    if ret and frame is not None:
+                        camera = test_camera
+                        print(f"   ✅ Found working camera at index {camera_idx}")
+                        break
+                    else:
+                        test_camera.release()
+                else:
+                    test_camera.release()
             
-            if not camera.isOpened():
-                print("❌ couldn't open the camera :(")
+            if camera is None:
+                print("❌ couldn't open any camera device")
+                print("   Troubleshooting:")
+                print("   1. Check camera connection: dmesg | grep camera")
+                print("   2. Test with libcamera: libcamera-hello")
+                print("   3. Install picamera2: sudo apt install python3-picamera2")
                 return None
             
             # letting the camera warm up a bit
-            time.sleep(0.5)
+            time.sleep(1.0)  # Increased warm-up time
             
             # grab one frame
             ret, frame = camera.read()
             camera.release()
             
-            if not ret:
+            if not ret or frame is None:
                 print("❌ couldn't grab an image from the camera")
+                print("   Frame is empty or invalid")
                 return None
 
             print(f"💾 saving image: {image_path}")
@@ -322,7 +380,8 @@ def continuous_monitoring(interval=15):
         print("\n✅ Monitoring stopped by user")
 
 if __name__ == "__main__":
-    import sys
+    # Print camera status on startup
+    print_camera_status()
     
     if len(sys.argv) > 1:
         if sys.argv[1] == "continuous":
@@ -330,6 +389,9 @@ if __name__ == "__main__":
             continuous_monitoring(interval)
         elif sys.argv[1] == "health":
             check_health()
+        elif sys.argv[1] == "camera-status":
+            # Just print camera status and exit
+            sys.exit(0)
     else:
         # Default: start continuous monitoring with 15-second interval
         continuous_monitoring(2)
