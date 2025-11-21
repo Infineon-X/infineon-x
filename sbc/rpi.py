@@ -1,13 +1,26 @@
 #!/usr/bin/env python3
 
 import requests
-import cv2
 import time
 from datetime import datetime
 import os
 import pyttsx3
 from dotenv import load_dotenv
 load_dotenv()
+
+# Try to import picamera2 (for newer Raspberry Pi OS with libcamera)
+try:
+    from picamera2 import Picamera2
+    PICAMERA2_AVAILABLE = True
+except ImportError:
+    PICAMERA2_AVAILABLE = False
+
+# Try to import OpenCV (fallback for older systems or non-Pi devices)
+try:
+    import cv2
+    OPENCV_AVAILABLE = True
+except ImportError:
+    OPENCV_AVAILABLE = False
 
 # grab the api url from env or just use localhost
 API_URL = os.getenv('API_URL', 'http://127.0.0.1:5001')
@@ -64,33 +77,73 @@ def capture_and_recognize(max_retries=3, retry_delay=2):
     test_images_dir = os.path.join(repo_root, "client", "test_images")
     os.makedirs(test_images_dir, exist_ok=True)
     
-    # using camera 2 (change if your cam is different)
-    camera = cv2.VideoCapture(0)
-    
-    if not camera.isOpened():
-        print("❌ couldn't open the camera :(")
-        return None
-    
-    # letting the camera warm up a bit
-    time.sleep(0.5)
-    
-    # grab one frame
-    ret, frame = camera.read()
-    camera.release()
-    
-    if not ret:
-        print("❌ couldn't grab an image from the camera")
-        return None
-
-    # save the image so we can upload it
+    # save the image path
     image_path = os.path.join(test_images_dir, f"capture_{datetime.now().strftime('%Y%m%d_%H%M%S')}.jpg")
-    print(f"💾 saving image: {image_path}")
     
-    if not cv2.imwrite(image_path, frame):
-        print("❌ failed to save image")
+    capture_success = False
+    
+    # Try to capture using picamera2 (for newer Raspberry Pi OS with libcamera)
+    if PICAMERA2_AVAILABLE:
+        try:
+            print("📷 Using picamera2 (libcamera)...")
+            picam2 = Picamera2()
+            picam2.start()
+            # Let camera warm up
+            time.sleep(0.5)
+            # Capture image
+            picam2.capture_file(image_path)
+            picam2.stop()
+            print(f"💾 saved image: {image_path}")
+            print("✅ saved the photo")
+            capture_success = True
+        except Exception as e:
+            print(f"⚠️ picamera2 failed: {e}")
+            print("🔄 Falling back to OpenCV...")
+    
+    # Fallback to OpenCV if picamera2 not available or failed
+    if not capture_success:
+        if not OPENCV_AVAILABLE:
+            print("❌ Neither picamera2 nor OpenCV available. Please install one:")
+            print("   For Raspberry Pi OS Bullseye+: sudo apt install python3-picamera2")
+            print("   For older systems: pip install opencv-python-headless")
+            return None
+        
+        try:
+            print("📷 Using OpenCV...")
+            # using camera 0 (change if your cam is different)
+            camera = cv2.VideoCapture(0)
+            
+            if not camera.isOpened():
+                print("❌ couldn't open the camera :(")
+                return None
+            
+            # letting the camera warm up a bit
+            time.sleep(0.5)
+            
+            # grab one frame
+            ret, frame = camera.read()
+            camera.release()
+            
+            if not ret:
+                print("❌ couldn't grab an image from the camera")
+                return None
+
+            print(f"💾 saving image: {image_path}")
+            
+            if not cv2.imwrite(image_path, frame):
+                print("❌ failed to save image")
+                return None
+            
+            print("✅ saved the photo")
+            capture_success = True
+        except Exception as e:
+            print(f"❌ OpenCV capture failed: {e}")
+            return None
+    
+    # Verify image was created
+    if not capture_success or not os.path.exists(image_path):
+        print("❌ Image file was not created")
         return None
-    
-    print("✅ saved the photo")
 
     # now send it to the api and ask for faces
     print("📤 sending image to ML model...")

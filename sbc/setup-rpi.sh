@@ -16,6 +16,10 @@ sudo apt-get install -y build-essential cmake gfortran git wget curl \
     libjpeg-dev liblapack-dev libswscale-dev pkg-config \
     python3-dev python3-numpy python3-pip python3-venv zip
 
+# Install picamera2 for newer Raspberry Pi OS (Bullseye+) with libcamera
+echo "📷 Installing picamera2 for libcamera support..."
+sudo apt-get install -y python3-picamera2 || echo "⚠️ picamera2 not available (may be older OS, will use OpenCV fallback)"
+
 # Create virtual environment
 echo "🔧 Creating virtual environment..."
 python3 -m venv venv

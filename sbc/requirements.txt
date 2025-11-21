@@ -3,3 +3,5 @@ python-dotenv==1.0.0
 requests==2.32.5
 numpy>=2.0.0,<2.3.0
 pyttsx3==2.99
+# picamera2 is installed via apt on Raspberry Pi OS, not pip
+# sudo apt install python3-picamera2

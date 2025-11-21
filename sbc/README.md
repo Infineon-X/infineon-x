@@ -1,4 +1,68 @@
-# Infinite Running Commands for Orange Pi
+# Infinite Running Commands for Orange Pi / Raspberry Pi
+
+## Camera Setup for Raspberry Pi 4
+
+### Important Note for Raspberry Pi OS Bullseye and Later
+
+If you don't see the "Camera" option in `raspi-config` on your Raspberry Pi 4, **this is normal**. Newer Raspberry Pi OS versions (Bullseye and later) have removed the legacy camera stack and its config menu option. The new camera driver uses `libcamera` instead of the older `raspicam` stack, and enabling the camera is no longer handled via `raspi-config`.
+
+### What To Do
+
+- **You do NOT need to enable the camera in `raspi-config` anymore.** The interface is now enabled by default.
+- Simply connect your camera, boot, and use `libcamera-*` commands.
+
+### To Test Your Camera
+
+1. Connect your OV5647/P5V04A camera as described before.
+
+2. Boot your Pi, open Terminal, and run:
+
+   - `libcamera-hello` (test stream)
+   - `libcamera-still -o image.jpg` (capture image)
+   - `libcamera-vid -t 10000 -o video.h264` (record 10s video)
+
+3. If you get errors, run `dmesg | grep camera` for hardware detection, or check the ribbon cable connection.
+
+### Troubleshooting
+
+- **Camera not detected**: Ensure the ribbon cable is connected with metal contacts facing the correct way.
+- **I2C requirement**: Use `raspi-config` to enable "I2C" only if your camera breakout requires it (most don't for standard Pi camera module).
+- **OS updates**: Make sure your OS is updated:
+  ```bash
+  sudo apt update && sudo apt upgrade && sudo reboot
+  ```
+
+If you encounter errors when running `libcamera-hello`, check:
+- Ribbon cable connection (metal contacts facing the correct direction)
+- Camera module compatibility with your Pi model
+- System logs: `dmesg | grep camera`
+
+### Python Camera Library Support
+
+The `rpi.py` script automatically detects and uses the best available camera library:
+
+1. **picamera2** (recommended for Raspberry Pi OS Bullseye+): Uses `libcamera` directly
+   - Install: `sudo apt install python3-picamera2`
+   - Automatically used if available
+
+2. **OpenCV** (fallback): Uses V4L2 interface
+   - Already included in `requirements.txt`
+   - Used if `picamera2` is not available
+
+The script will try `picamera2` first, then fall back to OpenCV if needed. This ensures compatibility with both newer and older Raspberry Pi OS versions.
+
+---
+
+## Installation
+
+1. Run the setup script:
+```bash
+./setup-rpi.sh
+```
+
+This will install all dependencies including `picamera2` for newer Raspberry Pi OS versions.
+
+---
 
 ## Option 1: Simple Bash Script (Recommended for testing)
 
