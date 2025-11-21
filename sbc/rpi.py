@@ -65,7 +65,7 @@ def capture_and_recognize(max_retries=3, retry_delay=2):
     os.makedirs(test_images_dir, exist_ok=True)
     
     # using camera 2 (change if your cam is different)
-    camera = cv2.VideoCapture(0)
+    camera = cv2.VideoCapture(1)
     
     if not camera.isOpened():
         print("❌ couldn't open the camera :(")
