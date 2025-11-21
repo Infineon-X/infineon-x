@@ -10,7 +10,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # grab the api url from env or just use localhost
-API_URL = os.getenv('API_URL', 'http://165.227.17.154:8080')
+API_URL = os.getenv('API_URL', 'http://138.197.234.202:8080')
 
 # Create a session for connection pooling and better performance
 session = requests.Session()
