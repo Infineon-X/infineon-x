@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { Camera, X, CheckCircle2, AlertCircle, Loader2, Settings, RefreshCw, Wifi, WifiOff } from "lucide-react";
 
 const DEFAULT_API_URL = process.env.NEXT_PUBLIC_API_URL || "http://138.197.234.202:8080";
+const ENROLLMENT_DELIMITER = "__rel__"; // safe for cross-platform filenames
 
 // Debug: Log API URL configuration
 console.log("[DEBUG] API Configuration:", {
@@ -156,7 +157,7 @@ export default function Home() {
     if (!normalizedName || !normalizedRelationship) {
       return "";
     }
-    return `${normalizedName}_${normalizedRelationship}`;
+    return `${normalizedName}${ENROLLMENT_DELIMITER}${normalizedRelationship}`;
   };
 
   const handleSaveSettings = () => {
@@ -970,7 +971,7 @@ export default function Home() {
                 type="text"
                 value={relationship}
                 onChange={(e) => setRelationship(e.target.value.toLowerCase())}
-                placeholder="friend"
+                placeholder="Friend"
                 className="w-full px-4 py-2 rounded-lg focus:outline-none focus:ring-2 transition-colors"
                 style={{ 
                   borderColor: 'var(--border-primary)',
