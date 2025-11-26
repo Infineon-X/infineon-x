@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState, useRef, useEffect } from "react";
 import { Camera, X, CheckCircle2, AlertCircle, Loader2, Settings, RefreshCw, Wifi, WifiOff } from "lucide-react";
 
@@ -782,7 +783,23 @@ export default function Home() {
         >
           <Settings className="w-5 h-5" />
         </button>
-        <h1 className="text-3xl font-semibold" style={{ color: 'var(--text-primary)' }}>Face Enrollment</h1>
+        <div className="w-full flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <h1 className="text-3xl font-semibold" style={{ color: 'var(--text-primary)' }}>Face Enrollment</h1>
+          <div className="flex gap-2">
+            <Link
+              href="/enrolled"
+              className="px-4 py-2 rounded-lg font-medium transition-colors border text-center"
+              style={{
+                borderColor: 'var(--border-primary)',
+                color: 'var(--text-primary)'
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--bg-tertiary)'}
+              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+            >
+              View Enrolled Faces
+            </Link>
+          </div>
+        </div>
 
         {/* Settings Modal */}
         {showSettings && (
