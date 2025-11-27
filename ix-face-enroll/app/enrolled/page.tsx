@@ -10,6 +10,8 @@ const ENROLLMENT_DELIMITER = "__rel__";
 type SortField = "name" | "relationship";
 type SortDirection = "asc" | "desc";
 
+export const dynamic = 'force-dynamic'
+
 interface EnrolledPerson {
   id: string;
   displayName: string;
