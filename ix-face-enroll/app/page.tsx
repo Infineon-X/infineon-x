@@ -1,9 +1,11 @@
 "use client";
 
+import Link from "next/link";
 import { useState, useRef, useEffect } from "react";
 import { Camera, X, CheckCircle2, AlertCircle, Loader2, Settings, RefreshCw, Wifi, WifiOff } from "lucide-react";
 
 const DEFAULT_API_URL = process.env.NEXT_PUBLIC_API_URL || "http://138.197.234.202:8080";
+const ENROLLMENT_DELIMITER = "__rel__"; // safe for cross-platform filenames
 
 // Debug: Log API URL configuration
 console.log("[DEBUG] API Configuration:", {
@@ -24,6 +26,7 @@ export default function Home() {
   const [isTestingApi, setIsTestingApi] = useState(false);
   const [apiTestResult, setApiTestResult] = useState<{ success: boolean; message: string } | null>(null);
   const [name, setName] = useState("");
+  const [relationship, setRelationship] = useState("");
   const [step, setStep] = useState<"name" | "capture" | "complete">("name");
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [capturedImages, setCapturedImages] = useState<CapturedImage[]>([]);
@@ -139,6 +142,7 @@ export default function Home() {
     console.log("[DEBUG] State update:", {
       step,
       name,
+      relationship,
       apiUrl,
       capturedImagesCount: capturedImages.length,
       uploadedCount: capturedImages.filter(img => img.uploaded).length,
@@ -147,6 +151,15 @@ export default function Home() {
       hasStream: !!stream
     });
   }, [step, name, apiUrl, capturedImages, isUploading, isTraining, stream]);
+
+  const getEnrollmentIdentifier = () => {
+    const normalizedName = name.trim().toLowerCase();
+    const normalizedRelationship = relationship.trim().toLowerCase();
+    if (!normalizedName || !normalizedRelationship) {
+      return "";
+    }
+    return `${normalizedName}${ENROLLMENT_DELIMITER}${normalizedRelationship}`;
+  };
 
   const handleSaveSettings = () => {
     if (settingsApiUrl.trim()) {
@@ -514,7 +527,18 @@ export default function Home() {
   };
 
   const uploadImage = async (dataUrl: string, id: string) => {
-    console.log("[DEBUG] uploadImage called:", { id, name, apiUrl });
+    const enrollmentKey = getEnrollmentIdentifier();
+    if (!enrollmentKey) {
+      console.error("[ERROR] Enrollment key missing before upload");
+      setMessage({
+        type: "error",
+        text: "Please provide both name and relationship before capturing photos."
+      });
+      setStep("name");
+      return;
+    }
+
+    console.log("[DEBUG] uploadImage called:", { id, enrollmentKey, apiUrl });
     setIsUploading(true);
     
     try {
@@ -546,7 +570,7 @@ export default function Home() {
       }
 
       const formData = new FormData();
-      formData.append("name", name);
+      formData.append("name", enrollmentKey);
       // Use the blob directly, or fixed blob if needed
       const imageBlob = blob.type.startsWith('image/') ? blob : new Blob([blob], { type: 'image/jpeg' });
       formData.append("image", imageBlob, "photo.jpg");
@@ -557,7 +581,7 @@ export default function Home() {
       
       console.log("[DEBUG] FormData created, sending to:", enrollUrl);
       console.log("[DEBUG] FormData entries:", {
-        name,
+        name: enrollmentKey,
         imageSize: imageBlob.size,
         imageType: imageBlob.type
       });
@@ -633,11 +657,22 @@ export default function Home() {
   };
 
   const completeEnrollment = async () => {
+    const enrollmentKey = getEnrollmentIdentifier();
+
     console.log("[DEBUG] completeEnrollment called:", {
-      name,
+      enrollmentKey,
       imageCount: capturedImages.length,
       apiUrl
     });
+
+    if (!enrollmentKey) {
+      setMessage({
+        type: "error",
+        text: "Please provide both name and relationship before completing enrollment."
+      });
+      setStep("name");
+      return;
+    }
 
     if (capturedImages.length === 0) {
       console.warn("[WARN] No images captured");
@@ -655,7 +690,7 @@ export default function Home() {
     setMessage(null);
 
     try {
-      const requestBody = { name };
+      const requestBody = { name: enrollmentKey };
       // Use proxy route to avoid CORS issues
       const useProxy = process.env.NODE_ENV === 'production' || apiUrl.includes('165.227.17.154');
       const trainUrl = useProxy ? '/api/train' : `${apiUrl}/train`;
@@ -727,6 +762,7 @@ export default function Home() {
   const resetEnrollment = () => {
     console.log("[DEBUG] resetEnrollment called");
     setName("");
+    setRelationship("");
     setStep("name");
     setCapturedImages([]);
     setMessage(null);
@@ -747,7 +783,23 @@ export default function Home() {
         >
           <Settings className="w-5 h-5" />
         </button>
-        <h1 className="text-3xl font-semibold" style={{ color: 'var(--text-primary)' }}>Face Enrollment</h1>
+        <div className="w-full flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <h1 className="text-3xl font-semibold" style={{ color: 'var(--text-primary)' }}>Face Enrollment</h1>
+          <div className="flex gap-2">
+            <Link
+              href="/enrolled"
+              className="px-4 py-2 rounded-lg font-medium transition-colors border text-center"
+              style={{
+                borderColor: 'var(--border-primary)',
+                color: 'var(--text-primary)'
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--bg-tertiary)'}
+              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+            >
+              View Enrolled Faces
+            </Link>
+          </div>
+        </div>
 
         {/* Settings Modal */}
         {showSettings && (
@@ -910,14 +962,33 @@ export default function Home() {
           <div className="w-full flex flex-col gap-4">
             <div>
               <label htmlFor="name" className="block text-sm font-medium mb-2" style={{ color: 'var(--text-primary)' }}>
-                Enter your name
+                Enter the person&apos;s name
               </label>
               <input
                 id="name"
                 type="text"
                 value={name}
-                onChange={(e) => setName(e.target.value)}
+                onChange={(e) => setName(e.target.value.toLowerCase())}
                 placeholder="John Doe"
+                className="w-full px-4 py-2 rounded-lg focus:outline-none focus:ring-2 transition-colors"
+                style={{ 
+                  borderColor: 'var(--border-primary)',
+                  backgroundColor: 'var(--bg-primary)',
+                  color: 'var(--text-primary)',
+                  '--tw-ring-color': 'var(--focus-ring)'
+                } as React.CSSProperties}
+              />
+            </div>
+            <div>
+              <label htmlFor="relationship" className="block text-sm font-medium mb-2" style={{ color: 'var(--text-primary)' }}>
+                Relationship to you
+              </label>
+              <input
+                id="relationship"
+                type="text"
+                value={relationship}
+                onChange={(e) => setRelationship(e.target.value.toLowerCase())}
+                placeholder="Friend"
                 className="w-full px-4 py-2 rounded-lg focus:outline-none focus:ring-2 transition-colors"
                 style={{ 
                   borderColor: 'var(--border-primary)',
@@ -979,10 +1050,10 @@ export default function Home() {
                   startCamera();
                 }
               }}
-              disabled={!name.trim()}
+              disabled={!name.trim() || !relationship.trim()}
               className="w-full flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-medium transition-colors"
               style={{ 
-                backgroundColor: !name.trim() ? 'var(--btn-disabled)' : 'var(--btn-primary)',
+                backgroundColor: (!name.trim() || !relationship.trim()) ? 'var(--btn-disabled)' : 'var(--btn-primary)',
                 color: 'var(--text-inverse)'
               }}
               onMouseEnter={(e) => {
