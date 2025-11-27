@@ -16,6 +16,18 @@ API_URL = os.getenv('API_URL', 'http://138.197.234.202:8080')
 session = requests.Session()
 session.headers.update({'User-Agent': 'OrangePi-Client/1.0'})
 
+def parse_name_with_relation(name_text):
+    """
+    Parse name with relation convention: name__rel__relation
+    Returns tuple (name, relation) or (name_text, None) if no relation found
+    """
+    if '__rel__' in name_text:
+        parts = name_text.split('__rel__', 1)
+        name = parts[0].strip()
+        relation = parts[1].strip() if len(parts) > 1 else None
+        return name, relation
+    return name_text, None
+
 def speak(text):
     """speak the text using the system's default speech synthesizer"""
     engine = pyttsx3.init()
@@ -65,7 +77,7 @@ def capture_and_recognize(max_retries=3, retry_delay=2):
     os.makedirs(test_images_dir, exist_ok=True)
     
     # using camera 2 (change if your cam is different)
-    camera = cv2.VideoCapture(1)
+    camera = cv2.VideoCapture(0)
     
     if not camera.isOpened():
         print("❌ couldn't open the camera :(")
@@ -154,10 +166,20 @@ def capture_and_recognize(max_retries=3, retry_delay=2):
                                     if name not in unique_names:
                                         unique_names.append(name)
                                 
-                                if len(unique_names) == 1:
-                                    speech_text = f"I see {unique_names[0]}"
+                                # Parse names and build speech text with relations
+                                speech_parts = []
+                                for name_text in unique_names:
+                                    name, relation = parse_name_with_relation(name_text)
+                                    if relation:
+                                        speech_parts.append(f"I see {name}, your {relation}")
+                                    else:
+                                        speech_parts.append(f"I see {name}")
+                                
+                                # Join multiple people with "and"
+                                if len(speech_parts) == 1:
+                                    speech_text = speech_parts[0]
                                 else:
-                                    speech_text = f"I see {', '.join(unique_names[:-1])}, and {unique_names[-1]}"
+                                    speech_text = ", ".join(speech_parts[:-1]) + f", and {speech_parts[-1]}"
                                 
                                 print(f"🔊 Speaking: {speech_text}")
                                 speak(speech_text)
