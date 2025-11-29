@@ -1,0 +1,6 @@
+Time(Seconds),Length(Seconds),Label(string),Confidence(double),Comment(string)
+3.0217997,0.7771017,Swipe,1,
+5.4194772,0.7826327,Swipe,1,
+7.4216896,0.7328539,Swipe,1,
+9.0395001,1.2638274,Push,1,
+11.7303187,1.1061946,Push,1,

@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<ImagimobStudio version="0.9">
+  <Timeline id="9c0e539b-7cb7-4749-a30b-45c9589da87e">
+    <Tracks>
+      <Track name="Radar-Data" type="datacsv" isLabelTrack="False">
+        <PayloadFile>Radar-Data.data</PayloadFile>
+      </Track>
+      <Track name="label" type="labelcsv">
+        <PayloadFile>label.label</PayloadFile>
+      </Track>
+    </Tracks>
+  </Timeline>
+</ImagimobStudio>
