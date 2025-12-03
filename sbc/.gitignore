@@ -15,3 +15,5 @@ __pycache__/
 .env
 
 client/test_images/*
+
+*.mp3

@@ -23,14 +23,22 @@ load_dotenv()
 # grab the api url from env or just use localhost
 API_URL = os.getenv('API_URL', 'http://138.197.234.202:8080')
 
+SESSION_USER_AGENT = 'OrangePi-Client/1.0'
+
 # Create a session for connection pooling and better performance
 session = requests.Session()
-session.headers.update({'User-Agent': 'OrangePi-Client/1.0'})
+session.headers.update({'User-Agent': SESSION_USER_AGENT})
 
-EDGE_TTS_VOICE = os.getenv('EDGE_TTS_VOICE', 'hi-IN-SwaraNeural')
-EDGE_TTS_RATE = os.getenv('EDGE_TTS_RATE', '+0%')
-EDGE_TTS_VOLUME = os.getenv('EDGE_TTS_VOLUME', '+0%')
-EDGE_TTS_OUTPUT_SUFFIX = '.mp3'
+# Text-to-speech configuration (mirrors sbc/audio-test.py style)
+# VOICE examples from sbc/audio-test.py:
+# - zh-CN-liaoning-XiaobeiNeural  (deep Chinese accent)
+# - hi-IN-SwaraNeural
+# - en-US-AvaNeural / Eric / Aria / Jenny / Guy / Sara / Thomas
+TTS_VOICE = os.getenv('EDGE_TTS_VOICE', 'en-US-EmmaMultilingualNeural')
+TTS_RATE = os.getenv('EDGE_TTS_RATE', '-20%')   # slowest is -100% and fastest is +200%
+TTS_PITCH = os.getenv('EDGE_TTS_PITCH', '+0Hz')  # lowest is -100Hz and highest is +100Hz
+TTS_VOLUME = os.getenv('EDGE_TTS_VOLUME', '+0%')  # loudest is 100% and quietest is 0%
+TTS_OUTPUT_FILE = os.getenv('EDGE_TTS_OUTPUT', 'output.mp3')
 
 def parse_name_with_relation(name_text):
     """
@@ -44,80 +52,58 @@ def parse_name_with_relation(name_text):
         return name, relation
     return name_text, None
 
-async def synthesize_with_edge_tts(text):
+async def generate_tts_audio(text: str) -> str:
     """
-    Use Microsoft's edge_tts service to synthesize speech for the provided text.
-    Returns the temp file path that holds the generated audio.
+    Generate speech using edge_tts into a fixed MP3 file, using the same
+    parameter style as sbc/audio-test.py (voice, rate, pitch, volume).
+    Returns the path to the generated file.
     """
     if EDGE_TTS_IMPORT_ERROR is not None:
         raise RuntimeError(
             "edge_tts dependency missing. Install with 'pip install edge-tts'."
         ) from EDGE_TTS_IMPORT_ERROR
+
     communicate = edge_tts.Communicate(
-        text=text,
-        voice=EDGE_TTS_VOICE,
-        rate=EDGE_TTS_RATE,
-        volume=EDGE_TTS_VOLUME
+        text,
+        TTS_VOICE,
+        rate=TTS_RATE,
+        pitch=TTS_PITCH,
+        volume=TTS_VOLUME,
     )
-    temp_file = tempfile.NamedTemporaryFile(
-        suffix=EDGE_TTS_OUTPUT_SUFFIX,
-        delete=False
-    )
-    temp_file_path = temp_file.name
-    temp_file.close()
 
-    await communicate.save(temp_file_path)
-    return temp_file_path
+    await communicate.save(TTS_OUTPUT_FILE)
+    return os.path.abspath(TTS_OUTPUT_FILE)
 
 
-def play_audio(audio_path):
+def speak(text: str) -> None:
     """
-    Attempt to play the synthesized audio using the first available CLI player.
+    Synthesize speech using edge_tts and play it with ffplay, mirroring
+    the behaviour of sbc/audio-test.py while keeping the same API.
     """
-    if not os.path.exists(audio_path):
-        print("⚠️ Audio file missing, nothing to play")
-        return
-
-    playback_commands = [
-        ["mpg123", "-q", audio_path],
-        ["ffplay", "-nodisp", "-autoexit", "-loglevel", "quiet", audio_path],
-        ["afplay", audio_path],
-        ["aplay", audio_path],
-    ]
-
-    for command in playback_commands:
-        try:
-            subprocess.run(command, check=True)
-            return
-        except FileNotFoundError:
-            continue
-        except subprocess.CalledProcessError as error:
-            print(f"⚠️ Playback command failed ({command[0]}): {error}")
-            continue
-
-    print("⚠️ No supported audio player found (install mpg123 or ffplay)")
-
-
-def speak(text):
-    """Synthesize speech using edge_tts and play the generated audio clip."""
     if not text:
         return
 
-    audio_path = None
-
     try:
-        audio_path = asyncio.run(synthesize_with_edge_tts(text))
-        play_audio(audio_path)
-    except edge_tts.exceptions.NoAudioReceived:
+        audio_path = asyncio.run(generate_tts_audio(text))
+        print(f"🔊 Playing TTS audio: {audio_path}")
+
+        subprocess.run(
+            [
+                "ffplay",
+                "-nodisp",
+                "-autoexit",
+                "-loglevel",
+                "quiet",
+                audio_path,
+            ],
+            check=True,
+        )
+    except FileNotFoundError:
+        print("⚠️ ffplay not found. Install ffmpeg to play audio automatically.")
+    except getattr(edge_tts, "exceptions", (Exception,)).NoAudioReceived:  # type: ignore[attr-defined]
         print("❌ edge_tts failed to return audio data")
     except Exception as error:
-        print(f"❌ Could not synthesize speech: {error}")
-    finally:
-        if audio_path and os.path.exists(audio_path):
-            try:
-                os.remove(audio_path)
-            except OSError as error:
-                print(f"⚠️ Could not delete temp audio file: {error}")
+        print(f"❌ Could not synthesize or play speech: {error}")
 
 def check_server_connection(max_retries=3, retry_delay=1):
     """Check if server is reachable and healthy"""
@@ -251,15 +237,14 @@ def capture_and_recognize(max_retries=3, retry_delay=2):
                                     if name not in unique_names:
                                         unique_names.append(name)
                                 
-                                # Parse names and build speech text with relations
+                                # Build a friendly, folksy speech text for recognized names
                                 speech_parts = []
                                 for name_text in unique_names:
                                     name, relation = parse_name_with_relation(name_text)
                                     if relation:
-                                        speech_parts.append(f"I see {name}, your {relation}")
+                                        speech_parts.append(f"that's {name}, your {relation}")
                                     else:
-                                        speech_parts.append(f"I see {name}")
-                                
+                                        speech_parts.append(f"...I see {name}.")
                                 # Join multiple people with "and"
                                 if len(speech_parts) == 1:
                                     speech_text = speech_parts[0]
