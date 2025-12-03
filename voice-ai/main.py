@@ -20,9 +20,9 @@ PITCH = "+0Hz"  # lowest is -100Hz and highest is +100Hz
 VOLUME = "+0%"  # FIXED: Use % format, not dB [web:1] loudest is 100% and quietest is 0%
 
 async def main() -> None:
-    # text = "quick brown fox jumps over the lazy dog "
+    # text = "quick brown fox jumps over the lazy dog " # English
     text = "测试蓝牙设备成功配对"
-  # or "测试 Bluetooth 设备成功配对"
+  # or "测试 Bluetooth 设备成功配对" # Chinese  
     
     # CLI-equivalent parameters (your working method)
     communicate = edge_tts.Communicate(
