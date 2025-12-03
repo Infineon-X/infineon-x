@@ -211,3 +211,4 @@ trained_folders.csv
 
 # Output files
 *.mp3
+*.wav
