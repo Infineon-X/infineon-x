@@ -1,12 +1,23 @@
 #!/usr/bin/env python3
 
-import requests
-import cv2
+import asyncio
+import os
+import subprocess
+import tempfile
 import time
 from datetime import datetime
-import os
-import pyttsx3
+
+import cv2
+import requests
 from dotenv import load_dotenv
+
+try:
+    import edge_tts  # type: ignore[import]
+except ImportError as edge_tts_error:  # pragma: no cover - handled at runtime
+    edge_tts = None  # type: ignore
+    EDGE_TTS_IMPORT_ERROR = edge_tts_error
+else:
+    EDGE_TTS_IMPORT_ERROR = None
 load_dotenv()
 
 # grab the api url from env or just use localhost
@@ -15,6 +26,11 @@ API_URL = os.getenv('API_URL', 'http://138.197.234.202:8080')
 # Create a session for connection pooling and better performance
 session = requests.Session()
 session.headers.update({'User-Agent': 'OrangePi-Client/1.0'})
+
+EDGE_TTS_VOICE = os.getenv('EDGE_TTS_VOICE', 'hi-IN-SwaraNeural')
+EDGE_TTS_RATE = os.getenv('EDGE_TTS_RATE', '+0%')
+EDGE_TTS_VOLUME = os.getenv('EDGE_TTS_VOLUME', '+0%')
+EDGE_TTS_OUTPUT_SUFFIX = '.mp3'
 
 def parse_name_with_relation(name_text):
     """
@@ -28,11 +44,80 @@ def parse_name_with_relation(name_text):
         return name, relation
     return name_text, None
 
+async def synthesize_with_edge_tts(text):
+    """
+    Use Microsoft's edge_tts service to synthesize speech for the provided text.
+    Returns the temp file path that holds the generated audio.
+    """
+    if EDGE_TTS_IMPORT_ERROR is not None:
+        raise RuntimeError(
+            "edge_tts dependency missing. Install with 'pip install edge-tts'."
+        ) from EDGE_TTS_IMPORT_ERROR
+    communicate = edge_tts.Communicate(
+        text=text,
+        voice=EDGE_TTS_VOICE,
+        rate=EDGE_TTS_RATE,
+        volume=EDGE_TTS_VOLUME
+    )
+    temp_file = tempfile.NamedTemporaryFile(
+        suffix=EDGE_TTS_OUTPUT_SUFFIX,
+        delete=False
+    )
+    temp_file_path = temp_file.name
+    temp_file.close()
+
+    await communicate.save(temp_file_path)
+    return temp_file_path
+
+
+def play_audio(audio_path):
+    """
+    Attempt to play the synthesized audio using the first available CLI player.
+    """
+    if not os.path.exists(audio_path):
+        print("⚠️ Audio file missing, nothing to play")
+        return
+
+    playback_commands = [
+        ["mpg123", "-q", audio_path],
+        ["ffplay", "-nodisp", "-autoexit", "-loglevel", "quiet", audio_path],
+        ["afplay", audio_path],
+        ["aplay", audio_path],
+    ]
+
+    for command in playback_commands:
+        try:
+            subprocess.run(command, check=True)
+            return
+        except FileNotFoundError:
+            continue
+        except subprocess.CalledProcessError as error:
+            print(f"⚠️ Playback command failed ({command[0]}): {error}")
+            continue
+
+    print("⚠️ No supported audio player found (install mpg123 or ffplay)")
+
+
 def speak(text):
-    """speak the text using the system's default speech synthesizer"""
-    engine = pyttsx3.init()
-    engine.say(text)
-    engine.runAndWait() # this line is important to make the speech actually happen
+    """Synthesize speech using edge_tts and play the generated audio clip."""
+    if not text:
+        return
+
+    audio_path = None
+
+    try:
+        audio_path = asyncio.run(synthesize_with_edge_tts(text))
+        play_audio(audio_path)
+    except edge_tts.exceptions.NoAudioReceived:
+        print("❌ edge_tts failed to return audio data")
+    except Exception as error:
+        print(f"❌ Could not synthesize speech: {error}")
+    finally:
+        if audio_path and os.path.exists(audio_path):
+            try:
+                os.remove(audio_path)
+            except OSError as error:
+                print(f"⚠️ Could not delete temp audio file: {error}")
 
 def check_server_connection(max_retries=3, retry_delay=1):
     """Check if server is reachable and healthy"""
@@ -251,6 +336,7 @@ def capture_and_recognize(max_retries=3, retry_delay=2):
         if os.path.exists(image_path):
             try:
                 os.remove(image_path)
+                # print(f"⚠️ Keeping temp image: {image_path}")
             except Exception as e:
                 print(f"⚠️ Could not remove temp image: {e}")
 
