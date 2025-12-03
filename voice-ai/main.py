@@ -34,8 +34,7 @@ async def main() -> None:
     )
     
     await communicate.save(OUTPUT_FILE)
-    print(f"✅ MP3 file (rate={RATE}) ready: {os.path.abspath(OUTPUT_FILE)}")
-    
+    print(f"✅ MP3 file (rate={RATE} volume={VOLUME}) ready: {os.path.abspath(OUTPUT_FILE)}")    
     subprocess.run(["ffplay", "-nodisp", "-autoexit", "-loglevel", "quiet", OUTPUT_FILE], check=True)
 
 if __name__ == "__main__":
