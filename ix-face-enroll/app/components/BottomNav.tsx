@@ -18,7 +18,7 @@ const BottomNav = () => {
       className="fixed inset-x-0 bottom-0 z-40 border-t md:hidden backdrop-blur-xl shadow-md"
       style={{
         backgroundColor: "var(--bg-glass)",
-        borderColor: "var(--separator)",
+        borderColor: "var(--border-primary)",
       }}
       aria-label="Primary navigation"
     >
@@ -36,8 +36,8 @@ const BottomNav = () => {
               href={item.href}
               className="flex flex-col items-center gap-1 rounded-full px-3 py-1 text-xs font-medium outline-none focus-visible:ring-2 focus-visible:ring-offset-0"
               style={{
-                color: isActive ? "var(--btn-primary)" : "var(--text-secondary)",
-                backgroundColor: isActive ? "var(--bg-tertiary)" : "transparent",
+                color: isActive ? "var(--accent-primary)" : "var(--text-secondary)",
+                backgroundColor: isActive ? "var(--btn-secondary)" : "transparent",
               }}
               aria-label={item.label}
             >
@@ -45,7 +45,7 @@ const BottomNav = () => {
                 className="h-5 w-5"
                 style={{
                   color: isActive
-                    ? "var(--btn-primary)"
+                    ? "var(--accent-primary)"
                     : "var(--text-secondary)",
                 }}
               />
