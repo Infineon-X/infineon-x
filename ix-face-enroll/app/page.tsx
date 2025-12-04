@@ -773,17 +773,7 @@ export default function Home() {
   };
 
   return (
-    <div
-      className="flex min-h-screen items-center justify-center font-sans p-4"
-      style={{
-        backgroundColor: "var(--background)",
-        backgroundImage:
-           "linear-gradient(rgba(255, 255, 255, 0.5), rgba(0, 0, 259, 0.5)), url('https://www.iclarified.com/images/news/97556/465557/465557-1280.avif')",
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-        backgroundAttachment: "fixed",
-      }}
-    >
+    <div className="flex min-h-screen items-center justify-center font-sans p-4">
       <main className="relative flex w-full max-w-4xl flex-col items-center gap-6 pt-8 card">
         <div className="flex w-full items-center justify-between gap-3">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">

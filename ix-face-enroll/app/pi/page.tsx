@@ -188,10 +188,7 @@ export default function PiControlPage() {
   };
 
   return (
-    <div
-      className="min-h-screen p-6 font-sans"
-      style={{ backgroundColor: "var(--background)" }}
-    >
+    <div className="min-h-screen p-6 font-sans">
       <div className="mx-auto max-w-6xl space-y-8">
         
         {/* Header */}
