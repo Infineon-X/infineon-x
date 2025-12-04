@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState, useRef, useEffect } from "react";
 import { Camera, X, CheckCircle2, AlertCircle, Loader2, Settings, RefreshCw, Wifi, WifiOff } from "lucide-react";
 
-const DEFAULT_API_URL = process.env.NEXT_PUBLIC_API_URL || "http://138.197.234.202:8080";
+const DEFAULT_API_URL = process.env.BACKEND_URL || "http://138.197.234.202:8080";
 const ENROLLMENT_DELIMITER = "__rel__"; // safe for cross-platform filenames
 
 // Debug: Log API URL configuration
