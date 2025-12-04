@@ -11,7 +11,18 @@ SERVICE_NAME="infineon-rpi-client.service"
 SERVICE_PATH="/etc/systemd/system/${SERVICE_NAME}"
 WORKING_DIR="${REPO_ROOT}"
 PYTHON_BIN="${REPO_ROOT}/sbc/venv/bin/python"
-SERVICE_USER="${SERVICE_USER:-pi}"
+
+# Determine which user the systemd service should run as:
+# 1) If SERVICE_USER is provided in the environment, use that.
+# 2) Else, if a 'pi' user exists (typical Raspberry Pi OS), use 'pi'.
+# 3) Else, fall back to the current user running this script.
+if [[ -n "${SERVICE_USER:-}" ]]; then
+  SERVICE_USER="${SERVICE_USER}"
+elif id -u pi >/dev/null 2>&1; then
+  SERVICE_USER="pi"
+else
+  SERVICE_USER="$(whoami)"
+fi
 
 if [[ ! -d "/run/systemd/system" ]]; then
   echo "❌ This script must be run on a system using systemd (like Raspberry Pi OS)."
