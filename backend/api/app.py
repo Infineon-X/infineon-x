@@ -6,6 +6,7 @@ import numpy as np
 from PIL import Image
 import os
 from datetime import datetime
+from zoneinfo import ZoneInfo
 import shutil
 import queue
 import threading
@@ -37,6 +38,34 @@ pi_state = {
     "last_updated": None,
     "last_result": None
 }
+
+PACIFIC_TIMEZONE = ZoneInfo("America/Los_Angeles")
+
+
+def get_pacific_time(dt: datetime | None = None) -> datetime:
+    """Return a timezone-aware datetime in US Pacific time."""
+    if dt is None:
+        return datetime.now(tz=PACIFIC_TIMEZONE)
+    if dt.tzinfo is None:
+        # Assume naive datetimes are in UTC and convert to Pacific
+        return dt.replace(tzinfo=ZoneInfo("UTC")).astimezone(PACIFIC_TIMEZONE)
+    return dt.astimezone(PACIFIC_TIMEZONE)
+
+
+def format_pacific_time(dt: datetime | None = None) -> str:
+    """
+    Format time as: Thu  4 Dec 04:14:42 PST 2025
+    Always in US Pacific time (America/Los_Angeles).
+    """
+    pacific_dt = get_pacific_time(dt)
+    weekday = pacific_dt.strftime("%a")
+    # Space-padded day (single-digit days get a leading space)
+    day_str = f"{pacific_dt.day:2d}"
+    month = pacific_dt.strftime("%b")
+    time_str = pacific_dt.strftime("%H:%M:%S")
+    tz_name = pacific_dt.strftime("%Z")
+    year = pacific_dt.strftime("%Y")
+    return f"{weekday} {day_str} {month} {time_str} {tz_name} {year}"
 
 def reload_encodings():
     """Reload encodings from file into memory"""
@@ -447,7 +476,8 @@ def pi_status_endpoint():
         status = data.get('status')
         if status:
             pi_state['status'] = status
-            pi_state['last_updated'] = datetime.now().isoformat()
+            # Store last_updated as a formatted Pacific Time string
+            pi_state['last_updated'] = format_pacific_time()
             logger.log_event('/pi/status', 'pi_status_update', True, f"Pi status: {status}", data)
             return jsonify({'success': True})
         return jsonify({'success': False, 'error': 'No status provided'}), 400

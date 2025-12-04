@@ -60,6 +60,50 @@ interface LogsResponse {
   total: number;
 }
 
+const PACIFIC_TIME_ZONE = "America/Los_Angeles";
+
+const formatPacificTime = (input: string | number | Date): string => {
+  const date = input instanceof Date ? input : new Date(input);
+  if (Number.isNaN(date.getTime())) {
+    return "Invalid date";
+  }
+
+  const formatter = new Intl.DateTimeFormat("en-US", {
+    weekday: "short",
+    day: "2-digit",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    timeZone: PACIFIC_TIME_ZONE,
+    timeZoneName: "short",
+    hour12: false,
+    year: "numeric",
+  });
+
+  const parts = formatter.formatToParts(date);
+  const getPart = (type: string) =>
+    parts.find((p) => p.type === type)?.value ?? "";
+
+  const weekday = getPart("weekday"); // e.g. "Thu"
+  const day = getPart("day"); // e.g. "04"
+  const month = getPart("month"); // e.g. "Dec"
+  const year = getPart("year"); // e.g. "2025"
+  const hour = getPart("hour"); // e.g. "04"
+  const minute = getPart("minute"); // e.g. "14"
+  const second = getPart("second"); // e.g. "42"
+  const timeZoneName = getPart("timeZoneName"); // e.g. "PST"
+
+  const numericDay = Number.parseInt(day, 10);
+  const paddedDay =
+    Number.isNaN(numericDay) || numericDay >= 10
+      ? day
+      : ` ${numericDay.toString()}`;
+
+  // Result example: "Thu  4 Dec 04:14:42 PST 2025"
+  return `${weekday} ${paddedDay} ${month} ${hour}:${minute}:${second} ${timeZoneName} ${year}`;
+};
+
 export default function PiControlPage() {
   const router = useRouter();
   const [status, setStatus] = useState<string>('unknown');
@@ -235,7 +279,7 @@ export default function PiControlPage() {
                 className="text-sm text-right"
                 style={{ color: "var(--text-muted)" }}
               >
-                Last Updated: {lastUpdated ? new Date(lastUpdated).toLocaleTimeString() : 'Never'}
+                Last Updated: {lastUpdated ? formatPacificTime(lastUpdated) : 'Never'}
               </div>
             </div>
           </div>
@@ -381,7 +425,7 @@ export default function PiControlPage() {
                       className="px-4 py-3 font-mono text-xs whitespace-nowrap"
                       style={{ color: "var(--text-secondary)" }}
                     >
-                      {new Date(entry.clientTimestamp || entry.timestamp || Date.now()).toLocaleTimeString()}
+                      {formatPacificTime(entry.clientTimestamp || entry.timestamp || Date.now())}
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex flex-col gap-1">
@@ -478,7 +522,7 @@ export default function PiControlPage() {
                       className="px-4 py-3 font-mono text-xs"
                       style={{ color: "var(--text-secondary)" }}
                     >
-                      {new Date(log.timestamp).toLocaleTimeString()}
+                      {formatPacificTime(log.timestamp)}
                     </td>
                     <td className="px-4 py-3 font-medium">{log.event_type}</td>
                     <td 
