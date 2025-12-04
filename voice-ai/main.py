@@ -5,7 +5,7 @@ import subprocess
 import edge_tts
 
 # VOICE = "zh-CN-liaoning-XiaobeiNeural"  # Deepest Chinese accent
-# VOICE = "hi-IN-SwaraNeural" 
+# VOICE = "hi-IN-SwaraNeural"
 # VOICE = "en-US-AvaNeural" # neutral american accent
 # VOICE = "en-US-EricNeural" # neutral american accent
 # VOICE = "en-US-AriaNeural" # neutral american accent
@@ -34,8 +34,7 @@ async def main() -> None:
     )
     
     await communicate.save(OUTPUT_FILE)
-    print(f"✅ MP3 file (rate={RATE}) ready: {os.path.abspath(OUTPUT_FILE)}")
-    
+    print(f"✅ MP3 file (rate={RATE} volume={VOLUME}) ready: {os.path.abspath(OUTPUT_FILE)}")    
     subprocess.run(["ffplay", "-nodisp", "-autoexit", "-loglevel", "quiet", OUTPUT_FILE], check=True)
 
 if __name__ == "__main__":

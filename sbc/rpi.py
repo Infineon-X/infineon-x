@@ -1,20 +1,44 @@
 #!/usr/bin/env python3
 
-import requests
-import cv2
+import asyncio
+import os
+import subprocess
+import tempfile
 import time
 from datetime import datetime
-import os
-import pyttsx3
+
+import cv2
+import requests
 from dotenv import load_dotenv
+
+try:
+    import edge_tts  # type: ignore[import]
+except ImportError as edge_tts_error:  # pragma: no cover - handled at runtime
+    edge_tts = None  # type: ignore
+    EDGE_TTS_IMPORT_ERROR = edge_tts_error
+else:
+    EDGE_TTS_IMPORT_ERROR = None
 load_dotenv()
 
 # grab the api url from env or just use localhost
 API_URL = os.getenv('API_URL', 'http://138.197.234.202:8080')
 
+SESSION_USER_AGENT = 'OrangePi-Client/1.0'
+
 # Create a session for connection pooling and better performance
 session = requests.Session()
-session.headers.update({'User-Agent': 'OrangePi-Client/1.0'})
+session.headers.update({'User-Agent': SESSION_USER_AGENT})
+
+# Text-to-speech configuration (mirrors sbc/audio-test.py style)
+# VOICE examples from sbc/audio-test.py:
+# - zh-CN-liaoning-XiaobeiNeural  (deep Chinese accent)
+# - hi-IN-SwaraNeural
+# - en-US-AvaNeural / Eric / Aria / Jenny / Guy / Sara / Thomas
+TTS_VOICE = os.getenv('EDGE_TTS_VOICE', 'en-US-EmmaMultilingualNeural')
+TTS_RATE = os.getenv('EDGE_TTS_RATE', '-20%')   # slowest is -100% and fastest is +200%
+TTS_PITCH = os.getenv('EDGE_TTS_PITCH', '+0Hz')  # lowest is -100Hz and highest is +100Hz
+TTS_VOLUME = os.getenv('EDGE_TTS_VOLUME', '+0%')  # loudest is 100% and quietest is 0%
+TTS_OUTPUT_FILE = os.getenv('EDGE_TTS_OUTPUT', 'output.mp3')
 
 def parse_name_with_relation(name_text):
     """
@@ -28,11 +52,58 @@ def parse_name_with_relation(name_text):
         return name, relation
     return name_text, None
 
-def speak(text):
-    """speak the text using the system's default speech synthesizer"""
-    engine = pyttsx3.init()
-    engine.say(text)
-    engine.runAndWait() # this line is important to make the speech actually happen
+async def generate_tts_audio(text: str) -> str:
+    """
+    Generate speech using edge_tts into a fixed MP3 file, using the same
+    parameter style as sbc/audio-test.py (voice, rate, pitch, volume).
+    Returns the path to the generated file.
+    """
+    if EDGE_TTS_IMPORT_ERROR is not None:
+        raise RuntimeError(
+            "edge_tts dependency missing. Install with 'pip install edge-tts'."
+        ) from EDGE_TTS_IMPORT_ERROR
+
+    communicate = edge_tts.Communicate(
+        text,
+        TTS_VOICE,
+        rate=TTS_RATE,
+        pitch=TTS_PITCH,
+        volume=TTS_VOLUME,
+    )
+
+    await communicate.save(TTS_OUTPUT_FILE)
+    return os.path.abspath(TTS_OUTPUT_FILE)
+
+
+def speak(text: str) -> None:
+    """
+    Synthesize speech using edge_tts and play it with ffplay, mirroring
+    the behaviour of sbc/audio-test.py while keeping the same API.
+    """
+    if not text:
+        return
+
+    try:
+        audio_path = asyncio.run(generate_tts_audio(text))
+        print(f"🔊 Playing TTS audio: {audio_path}")
+
+        subprocess.run(
+            [
+                "ffplay",
+                "-nodisp",
+                "-autoexit",
+                "-loglevel",
+                "quiet",
+                audio_path,
+            ],
+            check=True,
+        )
+    except FileNotFoundError:
+        print("⚠️ ffplay not found. Install ffmpeg to play audio automatically.")
+    except getattr(edge_tts, "exceptions", (Exception,)).NoAudioReceived:  # type: ignore[attr-defined]
+        print("❌ edge_tts failed to return audio data")
+    except Exception as error:
+        print(f"❌ Could not synthesize or play speech: {error}")
 
 def check_server_connection(max_retries=3, retry_delay=1):
     """Check if server is reachable and healthy"""
@@ -166,15 +237,14 @@ def capture_and_recognize(max_retries=3, retry_delay=2):
                                     if name not in unique_names:
                                         unique_names.append(name)
                                 
-                                # Parse names and build speech text with relations
+                                # Build a friendly, folksy speech text for recognized names
                                 speech_parts = []
                                 for name_text in unique_names:
                                     name, relation = parse_name_with_relation(name_text)
                                     if relation:
-                                        speech_parts.append(f"I see {name}, your {relation}")
+                                        speech_parts.append(f"that's {name}, your {relation}")
                                     else:
-                                        speech_parts.append(f"I see {name}")
-                                
+                                        speech_parts.append(f"...I see {name}.")
                                 # Join multiple people with "and"
                                 if len(speech_parts) == 1:
                                     speech_text = speech_parts[0]
@@ -251,6 +321,7 @@ def capture_and_recognize(max_retries=3, retry_delay=2):
         if os.path.exists(image_path):
             try:
                 os.remove(image_path)
+                # print(f"⚠️ Keeping temp image: {image_path}")
             except Exception as e:
                 print(f"⚠️ Could not remove temp image: {e}")
 
