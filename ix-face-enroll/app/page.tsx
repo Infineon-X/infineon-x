@@ -1,10 +1,11 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState, useRef, useEffect } from "react";
 import { Camera, X, CheckCircle2, AlertCircle, Loader2, Settings, RefreshCw, Wifi, WifiOff } from "lucide-react";
 
-const DEFAULT_API_URL = process.env.NEXT_PUBLIC_API_URL || "http://138.197.234.202:8080";
+const DEFAULT_API_URL = process.env.BACKEND_URL || "http://138.197.234.202:8080";
 const ENROLLMENT_DELIMITER = "__rel__"; // safe for cross-platform filenames
 
 // Debug: Log API URL configuration
@@ -20,6 +21,7 @@ interface CapturedImage {
 }
 
 export default function Home() {
+  const router = useRouter();
   const [apiUrl, setApiUrl] = useState<string>(DEFAULT_API_URL);
   const [showSettings, setShowSettings] = useState(false);
   const [settingsApiUrl, setSettingsApiUrl] = useState<string>(DEFAULT_API_URL);
@@ -771,52 +773,59 @@ export default function Home() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center font-sans p-4" style={{ backgroundColor: 'var(--bg-secondary)' }}>
-      <main className="flex w-full max-w-4xl flex-col items-center gap-6 rounded-lg shadow-lg p-6 sm:p-8 relative" style={{ backgroundColor: 'var(--bg-primary)' }}>
-        <button
-          onClick={handleOpenSettings}
-          className="absolute top-4 right-4 p-2 transition-colors"
-          style={{ color: 'var(--text-secondary)' }}
-          onMouseEnter={(e) => e.currentTarget.style.color = 'var(--text-primary)'}
-          onMouseLeave={(e) => e.currentTarget.style.color = 'var(--text-secondary)'}
-          title="Settings"
-        >
-          <Settings className="w-5 h-5" />
-        </button>
-        <div className="w-full flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <h1 className="text-3xl font-semibold" style={{ color: 'var(--text-primary)' }}>Face Enrollment</h1>
-          <div className="flex gap-2">
-            <Link
-              href="/pi"
-              className="px-4 py-2 rounded-lg font-medium transition-colors border text-center"
-              style={{
-                borderColor: 'var(--border-primary)',
-                color: 'var(--text-primary)'
-              }}
-              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--bg-tertiary)'}
-              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-            >
-              Manage Pi (Resource Intense)
-            </Link>
-            <Link
-              href="/enrolled"
-              className="px-4 py-2 rounded-lg font-medium transition-colors border text-center"
-              style={{
-                borderColor: 'var(--border-primary)',
-                color: 'var(--text-primary)'
-              }}
-              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--bg-tertiary)'}
-              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-            >
-              View Enrolled Faces
-            </Link>
+    <div
+      className="flex min-h-screen items-center justify-center font-sans p-4"
+      style={{
+        backgroundColor: "var(--background)",
+        backgroundImage:
+           "linear-gradient(rgba(255, 255, 255, 0.5), rgba(0, 0, 259, 0.5)), url('https://www.iclarified.com/images/news/97556/465557/465557-1280.avif')",
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        backgroundAttachment: "fixed",
+      }}
+    >
+      <main className="relative flex w-full max-w-4xl flex-col items-center gap-6 pt-8 card">
+        <div className="flex w-full items-center justify-between gap-3">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
+            <h1 className="text-3xl font-semibold" style={{ color: "var(--text-primary)" }}>
+              Infineon X Face
+            </h1>
+            <div className="hidden md:flex flex-wrap gap-2">
+              <button
+                type="button"
+                className="medium secondary border text-sm font-medium"
+                style={{ borderColor: "var(--border-primary)" }}
+                onClick={() => router.push("/pi")}
+              >
+                Manage Pi (Resource Intense)
+              </button>
+              <button
+                type="button"
+                className="medium secondary border text-sm font-medium"
+                style={{ borderColor: "var(--border-primary)" }}
+                onClick={() => router.push("/enrolled")}
+              >
+                View Enrolled Faces
+              </button>
+            </div>
           </div>
+          <button
+            type="button"
+            onClick={handleOpenSettings}
+            className="borderless small"
+            title="Settings"
+          >
+            <Settings className="w-5 h-5" />
+          </button>
         </div>
 
         {/* Settings Modal */}
         {showSettings && (
-          <div className="fixed inset-0 flex items-center justify-center z-50 p-4" style={{ backgroundColor: 'var(--bg-overlay)' }}>
-            <div className="rounded-lg shadow-xl p-6 w-full max-w-md" style={{ backgroundColor: 'var(--bg-primary)' }}>
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-sm"
+            style={{ backgroundColor: "var(--bg-overlay)" }}
+          >
+            <div className="card w-full max-w-md">
               <h2 className="text-xl font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>
                 API Settings
               </h2>
@@ -848,23 +857,9 @@ export default function Home() {
                 <button
                   onClick={testApiConnection}
                   disabled={isTestingApi || !settingsApiUrl.trim()}
-                  className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors border"
-                  style={{ 
-                    borderColor: 'var(--border-primary)',
-                    backgroundColor: isTestingApi || !settingsApiUrl.trim() ? 'var(--bg-tertiary)' : 'var(--bg-primary)',
-                    color: 'var(--text-primary)',
-                    opacity: isTestingApi || !settingsApiUrl.trim() ? 0.6 : 1,
-                    cursor: isTestingApi || !settingsApiUrl.trim() ? 'not-allowed' : 'pointer'
-                  }}
-                  onMouseEnter={(e) => {
-                    if (!e.currentTarget.disabled) {
-                      e.currentTarget.style.backgroundColor = 'var(--bg-tertiary)';
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (!e.currentTarget.disabled) {
-                      e.currentTarget.style.backgroundColor = 'var(--bg-primary)';
-                    }
+                  className="w-full flex items-center justify-center gap-2 border text-sm font-medium transition-colors secondary medium disabled:opacity-60 disabled:cursor-not-allowed"
+                  style={{
+                    borderColor: "var(--border-primary)",
                   }}
                 >
                   {isTestingApi ? (
@@ -901,25 +896,16 @@ export default function Home() {
                 <div className="flex gap-3">
                   <button
                     onClick={handleSaveSettings}
-                    className="flex-1 px-4 py-2 rounded-lg font-medium transition-colors"
-                    style={{ 
-                      backgroundColor: 'var(--btn-primary)',
-                      color: 'var(--text-inverse)'
-                    }}
-                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--btn-primary-hover)'}
-                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'var(--btn-primary)'}
+                    className="flex-1 medium primary"
                   >
                     Save
                   </button>
                   <button
                     onClick={() => setShowSettings(false)}
-                    className="flex-1 px-4 py-2 rounded-lg font-medium transition-colors border"
-                    style={{ 
-                      borderColor: 'var(--border-primary)',
-                      color: 'var(--text-primary)'
+                    className="flex-1 border medium secondary"
+                    style={{
+                      borderColor: "var(--border-primary)",
                     }}
-                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--bg-tertiary)'}
-                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                   >
                     Cancel
                   </button>
