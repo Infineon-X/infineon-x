@@ -159,10 +159,7 @@ export default function EnrolledListPage() {
   const totalCount = people.length;
 
   return (
-    <div
-      className="flex min-h-screen items-center justify-center font-sans p-4"
-      style={{ backgroundColor: "var(--background)" }}
-    >
+    <div className="flex min-h-screen items-center justify-center font-sans p-4">
       <main className="card flex w-full max-w-5xl flex-col gap-6">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
