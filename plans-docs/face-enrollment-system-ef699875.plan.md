@@ -99,6 +99,8 @@ Build a complete face enrollment flow: NextJS app captures photos → Backend st
 - Test error cases (no face detected, invalid image, etc.)
 - Verify SBC can still use `/recognize` endpoint after training refer sbc/ folder in this repo
 
+### To-dos
+
 - [ ] List all the folder like sbc/ and model-train/
 - [ ] Create NextJS enrollment page with name input, camera capture, and photo preview
 - [ ] Implement API calls to send images to /enroll endpoint one at a time
@@ -107,8 +109,12 @@ Build a complete face enrollment flow: NextJS app captures photos → Backend st
 - [ ] Create POST /train endpoint to process images and update encodings.pkl
 - [ ] Implement hot reload mechanism to reload encodings.pkl after training
 - [ ] Add validation and error handling for face detection, duplicate names, and training failures
-- [ ]
+- [ ] 
 
-### To-dos
+## Implementation Status (Dec 3, 2025)
 
-- [ ] List all the folder like sbc/ and model-train/
+### Completed Features (Pi Control & Logging)
+- [x] **SQLite Logging**: Implemented `backend/api/logger.py` with JSON support and daily backups.
+- [x] **Pi Control Backend**: Added `/pi/command`, `/pi/status`, `/pi/results` to Flask app.
+- [x] **Pi Client Update**: Updated `sbc/rpi.py` to poll for commands and report status.
+- [x] **Control Dashboard**: Created `ix-face-enroll/app/pi/page.tsx` for remote management.
