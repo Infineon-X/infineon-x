@@ -1,137 +1,158 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Liquid Glass - Light Mode */
+  --background: #f5f5f7;
+  --foreground: #1d1d1f;
   
-  /* Background colors */
+  /* Background colors - Translucent layers */
   --bg-primary: #ffffff;
-  --bg-secondary: #fafafa;
-  --bg-tertiary: #f4f4f5;
-  --bg-dark: #000000;
-  --bg-dark-secondary: #18181b;
-  --bg-dark-tertiary: #27272a;
-  --bg-overlay: rgba(0, 0, 0, 0.5);
+  --bg-secondary: rgba(255, 255, 255, 0.8);
+  --bg-tertiary: rgba(242, 242, 247, 0.8);
+  --bg-overlay: rgba(0, 0, 0, 0.04);
+  --bg-glass: rgba(255, 255, 255, 0.72);
+  
+  /* Apple system colors */
+  --accent-primary: #007AFF;
+  --accent-primary-hover: #0051D5;
+  --accent-secondary: #34C759;
+  --accent-tertiary: #00C7BE;
   
   /* Button colors */
-  --btn-primary: #2563eb;
-  --btn-primary-hover: #1d4ed8;
-  --btn-success: #16a34a;
-  --btn-success-hover: #15803d;
-  --btn-danger: #dc2626;
-  --btn-danger-hover: #b91c1c;
-  --btn-disabled: #a1a1aa;
+  --btn-primary: #007AFF;
+  --btn-primary-hover: #0051D5;
+  --btn-secondary: rgba(120, 120, 128, 0.16);
+  --btn-secondary-hover: rgba(120, 120, 128, 0.24);
+  --btn-success: #34C759;
+  --btn-success-hover: #248A3D;
+  --btn-danger: #FF3B30;
+  --btn-danger-hover: #D70015;
+  --btn-disabled: rgba(60, 60, 67, 0.18);
   
-  /* Text colors */
+  /* Text colors - San Francisco system */
   --text-primary: #000000;
-  --text-secondary: #52525b;
-  --text-tertiary: #71717a;
+  --text-secondary: rgba(60, 60, 67, 0.6);
+  --text-tertiary: rgba(60, 60, 67, 0.3);
   --text-inverse: #ffffff;
-  --text-muted: #a1a1aa;
+  --text-placeholder: rgba(60, 60, 67, 0.3);
   
-  /* Border colors */
-  --border-primary: #d4d4d8;
-  --border-secondary: #3f3f46;
+  /* Separator/Border colors */
+  --separator: rgba(60, 60, 67, 0.12);
+  --separator-opaque: #C6C6C8;
   
   /* Input colors */
-  --input-bg: #ffffff;
-  --input-border: #d1d5db;
-  --input-border-hover: #9ca3af;
-  --input-border-focus: #2563eb;
-  --input-text: #000000;
-  --input-placeholder: #9ca3af;
+  --input-bg: rgba(255, 255, 255, 0.8);
+  --input-border: rgba(0, 0, 0, 0.04);
+  --input-border-focus: rgba(0, 122, 255, 0.4);
   
-  /* Status colors */
-  --success-bg: #f0fdf4;
-  --success-text: #166534;
-  --success-icon: #16a34a;
-  --error-bg: #fef2f2;
-  --error-text: #991b1b;
-  --error-icon: #dc2626;
+  /* Shadows - Liquid Glass depth */
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.12);
   
   /* Focus ring */
-  --focus-ring: #3b82f6;
+  --focus-ring: rgba(0, 122, 255, 0.4);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", system-ui, sans-serif;
+  --font-mono: "SF Mono", ui-monospace, Menlo, Monaco, monospace;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #1e1e1e;
-    --foreground: #e5e5e5;
+    /* Liquid Glass - Dark Mode */
+    --background: #000000;
+    --foreground: #ffffff;
     
-    /* Background colors */
-    --bg-primary: #1e1e1e;
-    --bg-secondary: #2a2a2a;
-    --bg-tertiary: #363636;
-    --bg-dark: #1e1e1e;
-    --bg-dark-secondary: #2a2a2a;
-    --bg-dark-tertiary: #363636;
+    /* Background colors - Translucent dark layers */
+    --bg-primary: #000000;
+    --bg-secondary: rgba(28, 28, 30, 0.8);
+    --bg-tertiary: rgba(44, 44, 46, 0.8);
+    --bg-overlay: rgba(255, 255, 255, 0.04);
+    --bg-glass: rgba(28, 28, 30, 0.72);
+    
+    /* Apple system colors - Dark adapted */
+    --accent-primary: #0A84FF;
+    --accent-primary-hover: #409CFF;
+    --accent-secondary: #32D74B;
+    --accent-tertiary: #64D2FF;
+    
+    /* Button colors */
+    --btn-primary: #0A84FF;
+    --btn-primary-hover: #409CFF;
+    --btn-secondary: rgba(120, 120, 128, 0.24);
+    --btn-secondary-hover: rgba(120, 120, 128, 0.32);
+    --btn-success: #32D74B;
+    --btn-success-hover: #30DB75;
+    --btn-danger: #FF453A;
+    --btn-danger-hover: #FF6961;
+    --btn-disabled: rgba(235, 235, 245, 0.18);
     
     /* Text colors */
-    --text-primary: #e5e5e5;
-    --text-secondary: #b0b0b0;
-    --text-tertiary: #8a8a8a;
-    --text-inverse: #e5e5e5;
-    --text-muted: #707070;
+    --text-primary: #ffffff;
+    --text-secondary: rgba(235, 235, 245, 0.6);
+    --text-tertiary: rgba(235, 235, 245, 0.3);
+    --text-inverse: #000000;
+    --text-placeholder: rgba(235, 235, 245, 0.3);
     
-    /* Border colors */
-    --border-primary: #444444;
-    --border-secondary: #5a5a5a;
+    /* Separator/Border colors */
+    --separator: rgba(84, 84, 88, 0.48);
+    --separator-opaque: #38383A;
     
     /* Input colors */
-    --input-bg: #2a2a2a;
-    --input-border: #4a4a4a;
-    --input-border-hover: #5a5a5a;
-    --input-border-focus: #3b82f6;
-    --input-text: #e5e5e5;
-    --input-placeholder: #707070;
+    --input-bg: rgba(28, 28, 30, 0.8);
+    --input-border: rgba(255, 255, 255, 0.06);
+    --input-border-focus: rgba(10, 132, 255, 0.5);
     
-    /* Status colors */
-    --success-bg: rgba(16, 163, 74, 0.2);
-    --success-text: #86efac;
-    --success-icon: #16a34a;
-    --error-bg: rgba(220, 38, 38, 0.2);
-    --error-text: #fca5a5;
-    --error-icon: #dc2626;
+    /* Shadows - Enhanced for dark mode */
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.5);
+    --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.6);
+    
+    /* Focus ring */
+    --focus-ring: rgba(10, 132, 255, 0.5);
   }
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-/* Input Styling */
+/* Input Styling - Liquid Glass */
 input,
 textarea,
 select {
-  background-color: var(--input-bg);
-  color: var(--input-text);
-  border: 1.5px solid var(--input-border);
-  border-radius: 6px;
-  padding: 10px 12px;
-  font-size: 14px;
-  transition: all 0.2s ease;
-  width: 100%;
+  background: var(--input-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  color: var(--text-primary);
+  border: 0.5px solid var(--separator);
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 17px;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: var(--shadow-sm);
 }
 
 input::placeholder,
 textarea::placeholder {
-  color: var(--input-placeholder);
+  color: var(--text-placeholder);
   opacity: 1;
 }
 
 input:hover,
 textarea:hover,
 select:hover {
-  border-color: var(--input-border-hover);
+  background: var(--bg-glass);
+  border-color: var(--separator-opaque);
 }
 
 input:focus,
@@ -139,27 +160,152 @@ textarea:focus,
 select:focus {
   outline: none;
   border-color: var(--input-border-focus);
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+  box-shadow: 0 0 0 4px var(--focus-ring), var(--shadow-md);
+  background: var(--bg-glass);
 }
 
 input:disabled,
 textarea:disabled,
 select:disabled {
-  opacity: 0.5;
+  opacity: 0.4;
   cursor: not-allowed;
-  border-color: var(--input-border);
 }
 
-/* Button Styling */
+/* Button Styling - Capsule & Rounded Rectangle */
 button {
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
+  font-size: 17px;
+  font-weight: 510;
+  padding: 8px 20px;
+  border-radius: 20px; /* Capsule shape for large buttons */
+  border: none;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
 }
 
-button:hover:not(:disabled) {
-  cursor: pointer;
+/* Primary Button - Filled */
+button.primary,
+button[type="submit"] {
+  background: var(--btn-primary);
+  color: var(--text-inverse);
+  box-shadow: var(--shadow-sm);
 }
 
+button.primary:hover,
+button[type="submit"]:hover {
+  background: var(--btn-primary-hover);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
+}
+
+button.primary:active,
+button[type="submit"]:active {
+  transform: translateY(0);
+  box-shadow: var(--shadow-sm);
+}
+
+/* Secondary Button - Tinted */
+button.secondary {
+  background: var(--btn-secondary);
+  color: var(--text-primary);
+}
+
+button.secondary:hover {
+  background: var(--btn-secondary-hover);
+}
+
+/* Small/Medium buttons - Rounded rectangle */
+button.small,
+button.medium {
+  border-radius: 8px;
+  padding: 6px 16px;
+  font-size: 15px;
+}
+
+/* Success Button */
+button.success {
+  background: var(--btn-success);
+  color: var(--text-inverse);
+  box-shadow: var(--shadow-sm);
+}
+
+button.success:hover {
+  background: var(--btn-success-hover);
+  transform: translateY(-1px);
+}
+
+/* Danger Button */
+button.danger {
+  background: var(--btn-danger);
+  color: var(--text-inverse);
+  box-shadow: var(--shadow-sm);
+}
+
+button.danger:hover {
+  background: var(--btn-danger-hover);
+  transform: translateY(-1px);
+}
+
+/* Borderless Button */
+button.borderless {
+  background: transparent;
+  color: var(--accent-primary);
+  box-shadow: none;
+}
+
+button.borderless:hover {
+  background: var(--btn-secondary);
+}
+
+/* Disabled state */
 button:disabled {
+  background: var(--btn-disabled);
+  color: var(--text-tertiary);
   cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Links - System blue */
+a {
+  color: var(--accent-primary);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+a:hover {
+  color: var(--accent-primary-hover);
+}
+
+/* Cards/Containers - Liquid Glass effect */
+.card,
+.container {
+  background: var(--bg-glass);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 0.5px solid var(--separator);
+  border-radius: 16px;
+  padding: 16px;
+  box-shadow: var(--shadow-md);
+}
+
+/* Separators */
+hr,
+.separator {
+  border: none;
+  height: 0.5px;
+  background: var(--separator);
+}
+
+/* List items */
+ul, ol {
+  list-style-position: inside;
+}
+
+/* Selection */
+::selection {
+  background: var(--accent-primary);
+  color: var(--text-inverse);
 }
