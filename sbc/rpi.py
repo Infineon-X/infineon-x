@@ -52,6 +52,15 @@ def parse_name_with_relation(name_text):
         return name, relation
     return name_text, None
 
+
+def format_name_for_display(name_text):
+    """
+    Normalize underscores for nicer speech/output while preserving Unknown labels.
+    """
+    if not name_text or name_text == "Unknown":
+        return name_text
+    return " ".join(name_text.replace("_", " ").split())
+
 async def generate_tts_audio(text: str) -> str:
     """
     Generate speech using edge_tts into a fixed MP3 file, using the same
@@ -174,6 +183,7 @@ def capture_and_recognize(max_retries=3, retry_delay=2):
         return None
     
     print("✅ saved the photo")
+    should_keep_image = True
 
     # now send it to the api and ask for faces
     print("📤 sending image to ML model...")
@@ -215,9 +225,10 @@ def capture_and_recognize(max_retries=3, retry_delay=2):
                             for i, face in enumerate(faces, 1):
                                 name = face.get('name', 'Unknown')
                                 confidence = face.get('confidence', 0)
+                                display_name = format_name_for_display(name)
                                 
                                 print(f"Face #{i}:")
-                                print(f"  Name: {name}")
+                                print(f"  Name: {display_name}")
                                 print(f"  Confidence: {confidence:.1f}%")
                                 
                                 location = face.get('location', {})
@@ -237,19 +248,23 @@ def capture_and_recognize(max_retries=3, retry_delay=2):
                                     if name not in unique_names:
                                         unique_names.append(name)
                                 
-                                # Build a friendly, folksy speech text for recognized names
-                                speech_parts = []
+                                # Build a clear, natural speech text for recognized names
+                                spoken_fragments = []
                                 for name_text in unique_names:
-                                    name, relation = parse_name_with_relation(name_text)
+                                    base_name, relation = parse_name_with_relation(name_text)
+                                    base_name = format_name_for_display(base_name)
                                     if relation:
-                                        speech_parts.append(f"that's {name}, your {relation}")
+                                        spoken_fragments.append(f"{base_name}, your {relation}")
                                     else:
-                                        speech_parts.append(f"...I see {name}.")
-                                # Join multiple people with "and"
-                                if len(speech_parts) == 1:
-                                    speech_text = speech_parts[0]
+                                        spoken_fragments.append(base_name)
+
+                                if len(spoken_fragments) == 1:
+                                    # Single person
+                                    speech_text = f"I see {spoken_fragments[0]}."
                                 else:
-                                    speech_text = ", ".join(speech_parts[:-1]) + f", and {speech_parts[-1]}"
+                                    # Multiple people – join nicely with commas and "and"
+                                    everyone = ", ".join(spoken_fragments[:-1]) + f", and {spoken_fragments[-1]}"
+                                    speech_text = f"I see {len(spoken_fragments)} people: {everyone}."
                                 
                                 print(f"🔊 Speaking: {speech_text}")
                                 speak(speech_text)
@@ -257,6 +272,7 @@ def capture_and_recognize(max_retries=3, retry_delay=2):
                                 print("🔊 No recognized faces to announce")
                         else:
                             print("No faces detected in image")
+                            should_keep_image = False
                         
                         print("="*50 + "\n")
                         return result
@@ -320,8 +336,11 @@ def capture_and_recognize(max_retries=3, retry_delay=2):
         # get rid of the image file after sending
         if os.path.exists(image_path):
             try:
-                os.remove(image_path)
-                # print(f"⚠️ Keeping temp image: {image_path}")
+                if should_keep_image:
+                    print(f"⚠️ Keeping temp image: {image_path}")
+                else:
+                    os.remove(image_path)
+                    print(f"🗑️ Removed image without detected faces: {image_path}")
             except Exception as e:
                 print(f"⚠️ Could not remove temp image: {e}")
 
