@@ -1,16 +1,16 @@
 @import "tailwindcss";
 
 :root {
-  /* Liquid Glass - Light Mode */
-  --background: #f5f5f7;
+  /* Liquid Glass - Light Mode (iOS-inspired) */
+  --background: #f2f2f7; /* systemGroupedBackground */
   --foreground: #1d1d1f;
   
   /* Background colors - Translucent layers */
-  --bg-primary: #ffffff;
-  --bg-secondary: rgba(255, 255, 255, 0.8);
-  --bg-tertiary: rgba(242, 242, 247, 0.8);
-  --bg-overlay: rgba(0, 0, 0, 0.04);
-  --bg-glass: rgba(255, 255, 255, 0.72);
+  --bg-primary: #ffffff; /* primary card / sheet */
+  --bg-secondary: rgba(242, 242, 247, 0.96);
+  --bg-tertiary: rgba(250, 250, 252, 0.94);
+  --bg-overlay: rgba(0, 0, 0, 0.06);
+  --bg-glass: rgba(255, 255, 255, 0.82);
   
   /* Apple system colors */
   --accent-primary: #007AFF;
@@ -39,16 +39,18 @@
   /* Separator/Border colors */
   --separator: rgba(60, 60, 67, 0.12);
   --separator-opaque: #C6C6C8;
+  --border-primary: var(--separator-opaque);
+  --border-secondary: var(--separator);
   
   /* Input colors */
   --input-bg: rgba(255, 255, 255, 0.8);
   --input-border: rgba(0, 0, 0, 0.04);
   --input-border-focus: rgba(0, 122, 255, 0.4);
   
-  /* Shadows - Liquid Glass depth */
+  /* Shadows - Soft elevated surfaces */
   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06);
-  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.08);
-  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.12);
+  --shadow-md: 0 6px 18px rgba(0, 0, 0, 0.12);
+  --shadow-lg: 0 18px 40px rgba(0, 0, 0, 0.16);
   
   /* Focus ring */
   --focus-ring: rgba(0, 122, 255, 0.4);
@@ -63,16 +65,16 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    /* Liquid Glass - Dark Mode */
-    --background: #000000;
+    /* Liquid Glass - Dark Mode (iOS-style) */
+    --background: #000000; /* blends with device bezel */
     --foreground: #ffffff;
     
     /* Background colors - Translucent dark layers */
     --bg-primary: #000000;
-    --bg-secondary: rgba(28, 28, 30, 0.8);
-    --bg-tertiary: rgba(44, 44, 46, 0.8);
-    --bg-overlay: rgba(255, 255, 255, 0.04);
-    --bg-glass: rgba(28, 28, 30, 0.72);
+    --bg-secondary: rgba(28, 28, 30, 0.94);
+    --bg-tertiary: rgba(44, 44, 46, 0.9);
+    --bg-overlay: rgba(255, 255, 255, 0.06);
+    --bg-glass: rgba(18, 18, 20, 0.82);
     
     /* Apple system colors - Dark adapted */
     --accent-primary: #0A84FF;
@@ -101,16 +103,18 @@
     /* Separator/Border colors */
     --separator: rgba(84, 84, 88, 0.48);
     --separator-opaque: #38383A;
+    --border-primary: var(--separator);
+    --border-secondary: var(--separator-opaque);
     
     /* Input colors */
     --input-bg: rgba(28, 28, 30, 0.8);
     --input-border: rgba(255, 255, 255, 0.06);
     --input-border-focus: rgba(10, 132, 255, 0.5);
     
-    /* Shadows - Enhanced for dark mode */
-    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
-    --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.5);
-    --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.6);
+    /* Shadows - Subtle bloom in dark mode */
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.5);
+    --shadow-md: 0 10px 30px rgba(0, 0, 0, 0.7);
+    --shadow-lg: 0 24px 60px rgba(0, 0, 0, 0.9);
     
     /* Focus ring */
     --focus-ring: rgba(10, 132, 255, 0.5);
@@ -134,7 +138,7 @@ select {
   -webkit-backdrop-filter: blur(20px);
   color: var(--text-primary);
   border: 0.5px solid var(--separator);
-  border-radius: 10px;
+  border-radius: 14px; /* closer to iOS text field radius */
   padding: 10px 14px;
   font-size: 17px;
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
@@ -177,7 +181,7 @@ button {
   font-size: 17px;
   font-weight: 510;
   padding: 8px 20px;
-  border-radius: 20px; /* Capsule shape for large buttons */
+  border-radius: 22px; /* slightly softer capsule */
   border: none;
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
@@ -219,7 +223,7 @@ button.secondary:hover {
 /* Small/Medium buttons - Rounded rectangle */
 button.small,
 button.medium {
-  border-radius: 8px;
+  border-radius: 12px;
   padding: 6px 16px;
   font-size: 15px;
 }
@@ -286,7 +290,7 @@ a:hover {
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border: 0.5px solid var(--separator);
-  border-radius: 16px;
+  border-radius: 22px;
   padding: 16px;
   box-shadow: var(--shadow-md);
 }

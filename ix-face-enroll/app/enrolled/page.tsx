@@ -159,8 +159,11 @@ export default function EnrolledListPage() {
   const totalCount = people.length;
 
   return (
-    <div className="flex min-h-screen items-center justify-center font-sans p-4" style={{ backgroundColor: "var(--bg-secondary)" }}>
-      <main className="flex w-full max-w-5xl flex-col gap-6 rounded-lg shadow-lg p-6 sm:p-8" style={{ backgroundColor: "var(--bg-primary)" }}>
+    <div
+      className="flex min-h-screen items-center justify-center font-sans p-4"
+      style={{ backgroundColor: "var(--background)" }}
+    >
+      <main className="card flex w-full max-w-5xl flex-col gap-6">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h1 className="text-3xl font-semibold" style={{ color: "var(--text-primary)" }}>
@@ -202,13 +205,12 @@ export default function EnrolledListPage() {
 
         <div className="w-full flex flex-col gap-4">
           <div className="relative">
-            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2" style={{ color: "var(--text-secondary)" }} />
             <input
               type="text"
               placeholder="Search by name or relationship"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 rounded-lg focus:outline-none focus:ring-2 transition-colors"
+              className="w-full rounded-lg py-2 pl-11 pr-4 focus:outline-none focus:ring-2 transition-colors"
               style={{
                 borderColor: "var(--border-primary)",
                 backgroundColor: "var(--bg-primary)",
@@ -223,9 +225,18 @@ export default function EnrolledListPage() {
               onClick={() => handleSort("name")}
               className="flex items-center gap-2 px-3 py-2 rounded-lg border text-sm font-medium transition-colors"
               style={{
-                borderColor: "var(--border-primary)",
-                color: "var(--text-primary)",
-                backgroundColor: sortField === "name" ? "var(--bg-tertiary)" : "var(--bg-primary)",
+              borderColor:
+                sortField === "name"
+                  ? "var(--accent-primary)"
+                  : "var(--border-primary)",
+              color:
+                sortField === "name"
+                  ? "var(--accent-primary)"
+                  : "var(--text-primary)",
+              backgroundColor:
+                sortField === "name"
+                  ? "rgba(0, 122, 255, 0.12)"
+                  : "var(--bg-primary)",
               }}
             >
               <ArrowUpDown className="w-4 h-4" />
@@ -235,9 +246,18 @@ export default function EnrolledListPage() {
               onClick={() => handleSort("relationship")}
               className="flex items-center gap-2 px-3 py-2 rounded-lg border text-sm font-medium transition-colors"
               style={{
-                borderColor: "var(--border-primary)",
-                color: "var(--text-primary)",
-                backgroundColor: sortField === "relationship" ? "var(--bg-tertiary)" : "var(--bg-primary)",
+              borderColor:
+                sortField === "relationship"
+                  ? "var(--accent-primary)"
+                  : "var(--border-primary)",
+              color:
+                sortField === "relationship"
+                  ? "var(--accent-primary)"
+                  : "var(--text-primary)",
+              backgroundColor:
+                sortField === "relationship"
+                  ? "rgba(0, 122, 255, 0.12)"
+                  : "var(--bg-primary)",
               }}
             >
               <ArrowUpDown className="w-4 h-4" />

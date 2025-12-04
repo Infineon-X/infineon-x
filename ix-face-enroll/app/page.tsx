@@ -771,8 +771,11 @@ export default function Home() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center font-sans p-4" style={{ backgroundColor: 'var(--bg-secondary)' }}>
-      <main className="relative flex w-full max-w-4xl flex-col items-center gap-6 rounded-lg shadow-lg p-6 pt-12 sm:pt-8 sm:p-8" style={{ backgroundColor: 'var(--bg-primary)' }}>
+    <div
+      className="flex min-h-screen items-center justify-center font-sans p-4"
+      style={{ backgroundColor: "var(--background)" }}
+    >
+      <main className="relative flex w-full max-w-4xl flex-col items-center gap-6 pt-12 sm:pt-8 card">
         <button
           onClick={handleOpenSettings}
           className="absolute top-4 right-4 p-2 transition-colors"
@@ -791,10 +794,17 @@ export default function Home() {
               className="px-4 py-2 rounded-lg font-medium transition-colors border text-center"
               style={{
                 borderColor: 'var(--border-primary)',
-                color: 'var(--text-primary)'
+                color: 'var(--text-primary)',
+                backgroundColor: 'var(--bg-primary)'
               }}
-              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--bg-tertiary)'}
-              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = 'rgba(0, 122, 255, 0.12)';
+                e.currentTarget.style.color = 'var(--accent-primary)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = 'var(--bg-primary)';
+                e.currentTarget.style.color = 'var(--text-primary)';
+              }}
             >
               Manage Pi (Resource Intense)
             </Link>
@@ -803,10 +813,17 @@ export default function Home() {
               className="px-4 py-2 rounded-lg font-medium transition-colors border text-center"
               style={{
                 borderColor: 'var(--border-primary)',
-                color: 'var(--text-primary)'
+                color: 'var(--text-primary)',
+                backgroundColor: 'var(--bg-primary)'
               }}
-              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--bg-tertiary)'}
-              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = 'rgba(0, 122, 255, 0.12)';
+                e.currentTarget.style.color = 'var(--accent-primary)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = 'var(--bg-primary)';
+                e.currentTarget.style.color = 'var(--text-primary)';
+              }}
             >
               View Enrolled Faces
             </Link>
@@ -815,8 +832,11 @@ export default function Home() {
 
         {/* Settings Modal */}
         {showSettings && (
-          <div className="fixed inset-0 flex items-center justify-center z-50 p-4" style={{ backgroundColor: 'var(--bg-overlay)' }}>
-            <div className="rounded-lg shadow-xl p-6 w-full max-w-md" style={{ backgroundColor: 'var(--bg-primary)' }}>
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-sm"
+            style={{ backgroundColor: "var(--bg-overlay)" }}
+          >
+            <div className="card w-full max-w-md">
               <h2 className="text-xl font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>
                 API Settings
               </h2>
@@ -848,23 +868,9 @@ export default function Home() {
                 <button
                   onClick={testApiConnection}
                   disabled={isTestingApi || !settingsApiUrl.trim()}
-                  className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors border"
-                  style={{ 
-                    borderColor: 'var(--border-primary)',
-                    backgroundColor: isTestingApi || !settingsApiUrl.trim() ? 'var(--bg-tertiary)' : 'var(--bg-primary)',
-                    color: 'var(--text-primary)',
-                    opacity: isTestingApi || !settingsApiUrl.trim() ? 0.6 : 1,
-                    cursor: isTestingApi || !settingsApiUrl.trim() ? 'not-allowed' : 'pointer'
-                  }}
-                  onMouseEnter={(e) => {
-                    if (!e.currentTarget.disabled) {
-                      e.currentTarget.style.backgroundColor = 'var(--bg-tertiary)';
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (!e.currentTarget.disabled) {
-                      e.currentTarget.style.backgroundColor = 'var(--bg-primary)';
-                    }
+                  className="w-full flex items-center justify-center gap-2 border text-sm font-medium transition-colors secondary medium disabled:opacity-60 disabled:cursor-not-allowed"
+                  style={{
+                    borderColor: "var(--border-primary)",
                   }}
                 >
                   {isTestingApi ? (
@@ -901,25 +907,16 @@ export default function Home() {
                 <div className="flex gap-3">
                   <button
                     onClick={handleSaveSettings}
-                    className="flex-1 px-4 py-2 rounded-lg font-medium transition-colors"
-                    style={{ 
-                      backgroundColor: 'var(--btn-primary)',
-                      color: 'var(--text-inverse)'
-                    }}
-                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--btn-primary-hover)'}
-                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'var(--btn-primary)'}
+                    className="flex-1 medium primary"
                   >
                     Save
                   </button>
                   <button
                     onClick={() => setShowSettings(false)}
-                    className="flex-1 px-4 py-2 rounded-lg font-medium transition-colors border"
-                    style={{ 
-                      borderColor: 'var(--border-primary)',
-                      color: 'var(--text-primary)'
+                    className="flex-1 border medium secondary"
+                    style={{
+                      borderColor: "var(--border-primary)",
                     }}
-                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--bg-tertiary)'}
-                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                   >
                     Cancel
                   </button>
