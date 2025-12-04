@@ -1,81 +1,95 @@
-# Infinite Running Commands for Orange Pi
+# Raspberry Pi Client (`sbc/`)
 
-## Option 1: Simple Bash Script (Recommended for testing)
+Python client for capturing an image from the Pi camera, sending it to the backend API, speaking recognized names via `edge-tts`, and updating status/results endpoints.
 
-Run the script directly:
+The main entrypoint is:
+
 ```bash
-./run_continuous.sh [interval]
+python3 sbc/rpi.py
 ```
 
-Example (capture every 5 seconds):
+## 1. Setup on the Pi
+
+From the repo root on your Raspberry Pi:
+
 ```bash
-./run_continuous.sh 5
+cd /home/pi/infineon-x
+python3 -m venv sbc/venv
+source sbc/venv/bin/activate
+pip install --upgrade pip
+pip install -r sbc/requirements.txt
+```
+
+Configure your environment (backend URL, TTS, etc.) using a `.env` file in `sbc/`:
+
+```bash
+cd sbc
+cat > .env << 'EOF'
+API_URL=http://YOUR_BACKEND_HOST:8080
+EDGE_TTS_VOICE=en-US-EmmaMultilingualNeural
+EDGE_TTS_RATE=-20%
+EDGE_TTS_PITCH=+0Hz
+EDGE_TTS_VOLUME=+0%
+EOF
+```
+
+The script uses `python-dotenv` to load these settings.
+
+## 2. Manual Runs
+
+From the repo root or `sbc/`:
+
+```bash
+source sbc/venv/bin/activate
+
+# Health check to verify connectivity to backend
+python sbc/rpi.py health
+
+# Start the infinite main loop (poll commands + capture)
+python sbc/rpi.py
+```
+
+Logs will be printed to stdout and will show camera capture, API calls, and TTS activity.
+
+## 3. Run on Boot with systemd (Recommended)
+
+Use the helper script `run-rpi-boot.sh` to create and enable a `systemd` service that runs `rpi.py` on startup.
+
+From the repo root:
+
+```bash
+cd sbc
+chmod +x run-rpi-boot.sh
+./run-rpi-boot.sh
 ```
 
 The script will:
-- Auto-restart if the client crashes
-- Log timestamps
-- Run until you press Ctrl+C
 
-## Option 2: Systemd Service (Recommended for production)
+- Detect the repo root and Python binary (prefers `sbc/venv/bin/python` if it exists).
+- Write `/etc/systemd/system/infineon-rpi-client.service`.
+- Set the working directory to the repo root so `client/test_images` paths work.
+- Enable and start the service via `systemctl`.
 
-1. Edit the service file and update paths if needed:
+By default, it assumes the service user is `pi`. To override:
+
 ```bash
-nano orangepi-client.service
+SERVICE_USER=myuser ./run-rpi-boot.sh
 ```
 
-2. Copy service file to systemd directory:
+### Checking status and logs
+
+After the script runs, you can inspect the service:
+
 ```bash
-sudo cp orangepi-client.service /etc/systemd/system/
+sudo systemctl status infineon-rpi-client.service
+sudo journalctl -u infineon-rpi-client.service -f
 ```
 
-3. Reload systemd and enable service:
+To stop or disable on boot:
+
 ```bash
-sudo systemd daemon-reload
-sudo systemctl enable orangepi-client.service
+sudo systemctl stop infineon-rpi-client.service
+sudo systemctl disable infineon-rpi-client.service
 ```
 
-4. Start the service:
-```bash
-sudo systemctl start orangepi-client.service
-```
-
-5. Check status:
-```bash
-sudo systemctl status orangepi-client.service
-```
-
-6. View logs:
-```bash
-sudo journalctl -u orangepi-client.service -f
-```
-
-7. Stop the service:
-```bash
-sudo systemctl stop orangepi-client.service
-```
-
-## Option 3: Direct Python Command (Manual)
-
-Run directly with Python:
-```bash
-python3 orangepi_client.py continuous 5
-```
-
-## Option 4: Using nohup (Background)
-
-Run in background and log to file:
-```bash
-nohup python3 orangepi_client.py continuous 5 > client.log 2>&1 &
-```
-
-View logs:
-```bash
-tail -f client.log
-```
-
-Stop:
-```bash
-pkill -f orangepi_client.py
-```
 

@@ -7,9 +7,18 @@ from PIL import Image
 import os
 from datetime import datetime
 import shutil
+import queue
+import threading
+from . import logger  # Import the new logger module as a package-relative import
+import dotenv
+
+dotenv.load_dotenv()
 
 app = Flask(__name__)
 CORS(app)
+
+# Initialize Logger DB
+logger.init_db()
 
 # Load encodings at startup
 encodings_path = os.path.join(os.path.dirname(__file__), '..', 'encodings.pkl')
@@ -20,6 +29,14 @@ os.makedirs(temp_enrollments_path, exist_ok=True)
 
 print(f"Loading face encodings from: {encodings_path}")
 encodings = None
+
+# Raspberry Pi Management
+pi_command_queue = queue.Queue()
+pi_state = {
+    "status": "unknown", 
+    "last_updated": None,
+    "last_result": None
+}
 
 def reload_encodings():
     """Reload encodings from file into memory"""
@@ -51,7 +68,11 @@ def home():
             '/health': 'GET - Health check',
             '/recognize': 'POST - Recognize faces (multipart/form-data with "image" field)',
             '/enroll': 'POST - Enroll face images (multipart/form-data with "name" and "image" fields)',
-            '/train': 'POST - Train model with enrolled images (application/json with "name" field)'
+            '/train': 'POST - Train model with enrolled images (application/json with "name" field)',
+            '/logs': 'GET - Retrieve system logs',
+            '/pi/command': 'POST/GET - Send or retrieve Pi commands',
+            '/pi/status': 'POST/GET - Update or retrieve Pi status',
+            '/pi/results': 'POST/GET - Update or retrieve Pi recognition results'
         }
     })
 
@@ -69,6 +90,23 @@ def health():
         'known_people': list(set(encodings['names']))
     })
 
+@app.route('/logs', methods=['GET'])
+def get_logs():
+    """Retrieve system logs"""
+    try:
+        limit = int(request.args.get('limit', 50))
+        offset = int(request.args.get('offset', 0))
+        endpoint = request.args.get('endpoint')
+        event_type = request.args.get('event_type')
+        success = request.args.get('success')
+        if success is not None:
+            success = success.lower() == 'true'
+            
+        result = logger.get_logs(limit, offset, endpoint, event_type, success)
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 @app.route('/recognize', methods=['POST'])
 def recognize():
     if encodings is None:
@@ -80,6 +118,7 @@ def recognize():
     try:
         # Check if image is provided
         if 'image' not in request.files:
+            logger.log_event('/recognize', 'recognition', False, 'No image provided')
             return jsonify({
                 'success': False,
                 'error': 'No image provided. Send as form-data with key "image"'
@@ -137,6 +176,14 @@ def recognize():
             
             print(f"  - {name} ({confidence:.1f}%)")
         
+        # Log the recognition event
+        log_msg = f"Recognized {len(results)} face(s)"
+        logger.log_event('/recognize', 'recognition', True, log_msg, {
+            'faces': results,
+            'image_size': {'width': image.width, 'height': image.height},
+            'total_faces': len(results)
+        })
+
         return jsonify({
             'success': True,
             'faces': results,
@@ -149,6 +196,7 @@ def recognize():
         
     except Exception as e:
         print(f"Error: {str(e)}")
+        logger.log_event('/recognize', 'error', False, str(e))
         return jsonify({
             'success': False,
             'error': str(e)
@@ -187,6 +235,7 @@ def enroll():
                 image = image.convert('RGB')
             image_array = np.array(image)
         except Exception as e:
+            logger.log_event('/enroll', 'enrollment_error', False, f'Invalid image: {str(e)}', {'name': name})
             return jsonify({
                 'success': False,
                 'error': f'Invalid image format: {str(e)}'
@@ -226,6 +275,12 @@ def enroll():
         
         print(f"✅ Enrolled image for {name}: {image_filename} (total: {image_count})")
         
+        logger.log_event('/enroll', 'enrollment', True, f'Enrolled image for {name}', {
+            'name': name,
+            'image_filename': image_filename,
+            'total_images': image_count
+        })
+        
         return jsonify({
             'success': True,
             'message': f'Image saved successfully',
@@ -234,6 +289,7 @@ def enroll():
         
     except Exception as e:
         print(f"Error in enroll: {str(e)}")
+        logger.log_event('/enroll', 'error', False, str(e))
         return jsonify({
             'success': False,
             'error': str(e)
@@ -339,6 +395,12 @@ def train():
         except Exception as e:
             print(f"Warning: Failed to clean up {person_dir}: {str(e)}")
         
+        logger.log_event('/train', 'training', True, f'Training complete for {name}', {
+            'name': name,
+            'faces_added': faces_added,
+            'total_faces': len(encodings_list)
+        })
+        
         return jsonify({
             'success': True,
             'message': f'Training complete for {name}',
@@ -348,10 +410,69 @@ def train():
         
     except Exception as e:
         print(f"Error in train: {str(e)}")
+        logger.log_event('/train', 'error', False, str(e))
         return jsonify({
             'success': False,
             'error': str(e)
         }), 500
+
+# --- Pi Management Endpoints ---
+
+@app.route('/pi/command', methods=['POST', 'GET'])
+def pi_command():
+    if request.method == 'POST':
+        # Add command to queue
+        data = request.get_json()
+        command = data.get('command')
+        if not command:
+            return jsonify({'success': False, 'error': 'No command provided'}), 400
+            
+        pi_command_queue.put(command)
+        logger.log_event('/pi/command', 'pi_command_queued', True, f"Queued command: {command}")
+        return jsonify({'success': True, 'message': f"Command '{command}' queued"})
+    
+    else:
+        # Get next command from queue (called by Pi)
+        try:
+            command = pi_command_queue.get_nowait()
+            return jsonify({'command': command})
+        except queue.Empty:
+            return jsonify({'command': None})
+
+@app.route('/pi/status', methods=['POST', 'GET'])
+def pi_status_endpoint():
+    if request.method == 'POST':
+        # Update status (called by Pi)
+        data = request.get_json()
+        status = data.get('status')
+        if status:
+            pi_state['status'] = status
+            pi_state['last_updated'] = datetime.now().isoformat()
+            logger.log_event('/pi/status', 'pi_status_update', True, f"Pi status: {status}", data)
+            return jsonify({'success': True})
+        return jsonify({'success': False, 'error': 'No status provided'}), 400
+    
+    else:
+        # Get status (called by UI)
+        return jsonify(pi_state)
+
+@app.route('/pi/results', methods=['POST', 'GET'])
+def pi_results():
+    if request.method == 'POST':
+        # Update results (called by Pi)
+        data = request.get_json()
+        pi_state['last_result'] = data
+        
+        # Log interesting results
+        faces = data.get('faces', [])
+        if faces:
+            logger.log_event('/pi/results', 'pi_recognition', True, f"Pi detected {len(faces)} faces", data)
+            
+        return jsonify({'success': True})
+    
+    else:
+        # Get last result (called by UI)
+        return jsonify(pi_state.get('last_result') or {})
 
 if __name__ == '__main__':
     print(f"Starting server on port {os.environ.get('PORT', 8080)}")
