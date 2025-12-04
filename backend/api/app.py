@@ -9,7 +9,7 @@ from datetime import datetime
 import shutil
 import queue
 import threading
-import logger  # Import the new logger module
+from . import logger  # Import the new logger module as a package-relative import
 import dotenv
 
 dotenv.load_dotenv()
