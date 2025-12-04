@@ -33,6 +33,14 @@
   --border-primary: #d4d4d8;
   --border-secondary: #3f3f46;
   
+  /* Input colors */
+  --input-bg: #ffffff;
+  --input-border: #d1d5db;
+  --input-border-hover: #9ca3af;
+  --input-border-focus: #2563eb;
+  --input-text: #000000;
+  --input-placeholder: #9ca3af;
+  
   /* Status colors */
   --success-bg: #f0fdf4;
   --success-text: #166534;
@@ -54,27 +62,35 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #1e1e1e;
+    --foreground: #e5e5e5;
     
     /* Background colors */
-    --bg-primary: #000000;
-    --bg-secondary: #18181b;
-    --bg-tertiary: #27272a;
-    --bg-dark: #000000;
-    --bg-dark-secondary: #18181b;
-    --bg-dark-tertiary: #27272a;
+    --bg-primary: #1e1e1e;
+    --bg-secondary: #2a2a2a;
+    --bg-tertiary: #363636;
+    --bg-dark: #1e1e1e;
+    --bg-dark-secondary: #2a2a2a;
+    --bg-dark-tertiary: #363636;
     
     /* Text colors */
-    --text-primary: #fafafa;
-    --text-secondary: #a1a1aa;
-    --text-tertiary: #71717a;
-    --text-inverse: #ffffff;
-    --text-muted: #52525b;
+    --text-primary: #e5e5e5;
+    --text-secondary: #b0b0b0;
+    --text-tertiary: #8a8a8a;
+    --text-inverse: #e5e5e5;
+    --text-muted: #707070;
     
     /* Border colors */
-    --border-primary: #3f3f46;
-    --border-secondary: #52525b;
+    --border-primary: #444444;
+    --border-secondary: #5a5a5a;
+    
+    /* Input colors */
+    --input-bg: #2a2a2a;
+    --input-border: #4a4a4a;
+    --input-border-hover: #5a5a5a;
+    --input-border-focus: #3b82f6;
+    --input-text: #e5e5e5;
+    --input-placeholder: #707070;
     
     /* Status colors */
     --success-bg: rgba(16, 163, 74, 0.2);
@@ -92,8 +108,52 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
+/* Input Styling */
+input,
+textarea,
+select {
+  background-color: var(--input-bg);
+  color: var(--input-text);
+  border: 1.5px solid var(--input-border);
+  border-radius: 6px;
+  padding: 10px 12px;
+  font-size: 14px;
+  transition: all 0.2s ease;
+  width: 100%;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--input-placeholder);
+  opacity: 1;
+}
+
+input:hover,
+textarea:hover,
+select:hover {
+  border-color: var(--input-border-hover);
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  outline: none;
+  border-color: var(--input-border-focus);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+input:disabled,
+textarea:disabled,
+select:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  border-color: var(--input-border);
+}
+
+/* Button Styling */
 button {
   cursor: pointer;
+  transition: all 0.2s ease;
 }
 
 button:hover:not(:disabled) {
