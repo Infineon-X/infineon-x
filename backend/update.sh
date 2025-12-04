@@ -15,7 +15,7 @@ git pull
 cd $WORK_DIR
 if [ -f "venv/bin/activate" ]; then
     source venv/bin/activate
-    pip install -r requirements.txt --quiet
+    pip install -r requirements.txt
 else
     echo "⚠️  Virtual environment not found. Run deploy.sh first."
     exit 1
