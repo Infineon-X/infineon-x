@@ -772,7 +772,7 @@ export default function Home() {
 
   return (
     <div className="flex min-h-screen items-center justify-center font-sans p-4" style={{ backgroundColor: 'var(--bg-secondary)' }}>
-      <main className="flex w-full max-w-4xl flex-col items-center gap-6 rounded-lg shadow-lg p-6 sm:p-8 relative" style={{ backgroundColor: 'var(--bg-primary)' }}>
+      <main className="relative flex w-full max-w-4xl flex-col items-center gap-6 rounded-lg shadow-lg p-6 pt-12 sm:pt-8 sm:p-8" style={{ backgroundColor: 'var(--bg-primary)' }}>
         <button
           onClick={handleOpenSettings}
           className="absolute top-4 right-4 p-2 transition-colors"
@@ -784,8 +784,8 @@ export default function Home() {
           <Settings className="w-5 h-5" />
         </button>
         <div className="w-full flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <h1 className="text-3xl font-semibold" style={{ color: 'var(--text-primary)' }}>Face Enrollment</h1>
-          <div className="flex gap-2">
+          <h1 className="text-3xl font-semibold" style={{ color: 'var(--text-primary)' }}>Infineon X Face</h1>
+          <div className="hidden md:flex gap-2">
             <Link
               href="/pi"
               className="px-4 py-2 rounded-lg font-medium transition-colors border text-center"
