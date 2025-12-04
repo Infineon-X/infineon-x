@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState, useRef, useEffect } from "react";
 import { Camera, X, CheckCircle2, AlertCircle, Loader2, Settings, RefreshCw, Wifi, WifiOff } from "lucide-react";
 
@@ -20,6 +21,7 @@ interface CapturedImage {
 }
 
 export default function Home() {
+  const router = useRouter();
   const [apiUrl, setApiUrl] = useState<string>(DEFAULT_API_URL);
   const [showSettings, setShowSettings] = useState(false);
   const [settingsApiUrl, setSettingsApiUrl] = useState<string>(DEFAULT_API_URL);
@@ -775,59 +777,39 @@ export default function Home() {
       className="flex min-h-screen items-center justify-center font-sans p-4"
       style={{ backgroundColor: "var(--background)" }}
     >
-      <main className="relative flex w-full max-w-4xl flex-col items-center gap-6 pt-12 sm:pt-8 card">
-        <button
-          onClick={handleOpenSettings}
-          className="absolute top-4 right-4 p-2 transition-colors"
-          style={{ color: 'var(--text-secondary)' }}
-          onMouseEnter={(e) => e.currentTarget.style.color = 'var(--text-primary)'}
-          onMouseLeave={(e) => e.currentTarget.style.color = 'var(--text-secondary)'}
-          title="Settings"
-        >
-          <Settings className="w-5 h-5" />
-        </button>
-        <div className="w-full flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <h1 className="text-3xl font-semibold" style={{ color: 'var(--text-primary)' }}>Infineon X Face</h1>
-          <div className="hidden md:flex gap-2">
-            <Link
-              href="/pi"
-              className="px-4 py-2 rounded-lg font-medium transition-colors border text-center"
-              style={{
-                borderColor: 'var(--border-primary)',
-                color: 'var(--text-primary)',
-                backgroundColor: 'var(--bg-primary)'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = 'rgba(0, 122, 255, 0.12)';
-                e.currentTarget.style.color = 'var(--accent-primary)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = 'var(--bg-primary)';
-                e.currentTarget.style.color = 'var(--text-primary)';
-              }}
-            >
-              Manage Pi (Resource Intense)
-            </Link>
-            <Link
-              href="/enrolled"
-              className="px-4 py-2 rounded-lg font-medium transition-colors border text-center"
-              style={{
-                borderColor: 'var(--border-primary)',
-                color: 'var(--text-primary)',
-                backgroundColor: 'var(--bg-primary)'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = 'rgba(0, 122, 255, 0.12)';
-                e.currentTarget.style.color = 'var(--accent-primary)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = 'var(--bg-primary)';
-                e.currentTarget.style.color = 'var(--text-primary)';
-              }}
-            >
-              View Enrolled Faces
-            </Link>
+      <main className="relative flex w-full max-w-4xl flex-col items-center gap-6 pt-8 card">
+        <div className="flex w-full items-center justify-between gap-3">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
+            <h1 className="text-3xl font-semibold" style={{ color: "var(--text-primary)" }}>
+              Infineon X Face
+            </h1>
+            <div className="hidden md:flex flex-wrap gap-2">
+              <button
+                type="button"
+                className="medium secondary border text-sm font-medium"
+                style={{ borderColor: "var(--border-primary)" }}
+                onClick={() => router.push("/pi")}
+              >
+                Manage Pi (Resource Intense)
+              </button>
+              <button
+                type="button"
+                className="medium secondary border text-sm font-medium"
+                style={{ borderColor: "var(--border-primary)" }}
+                onClick={() => router.push("/enrolled")}
+              >
+                View Enrolled Faces
+              </button>
+            </div>
           </div>
+          <button
+            type="button"
+            onClick={handleOpenSettings}
+            className="borderless small"
+            title="Settings"
+          >
+            <Settings className="w-5 h-5" />
+          </button>
         </div>
 
         {/* Settings Modal */}

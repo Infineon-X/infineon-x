@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { 
   Power, Camera, StopCircle, Activity, 
   Server, Terminal, RefreshCw, History, Trash2 
@@ -61,6 +61,7 @@ interface LogsResponse {
 }
 
 export default function PiControlPage() {
+  const router = useRouter();
   const [status, setStatus] = useState<string>('unknown');
   const [lastUpdated, setLastUpdated] = useState<string | null>(null);
   const [lastResult, setLastResult] = useState<RecognitionResult | null>(null);
@@ -187,41 +188,32 @@ export default function PiControlPage() {
   };
 
   return (
-    <div 
+    <div
       className="min-h-screen p-6 font-sans"
-      style={{ backgroundColor: "var(--bg-secondary)", color: "var(--text-primary)" }}
+      style={{ backgroundColor: "var(--background)" }}
     >
-      <div className="max-w-6xl mx-auto space-y-8">
+      <div className="mx-auto max-w-6xl space-y-8">
         
         {/* Header */}
-        <div className="flex justify-between items-center">
-          <h1 className="text-3xl font-bold flex items-center gap-2">
+        <div className="flex items-center justify-between">
+          <h1 className="flex items-center gap-2 text-3xl font-bold">
             <Server className="w-8 h-8" style={{ color: "var(--btn-primary)" }} />
             Pi Control Center
           </h1>
-          <Link 
-            href="/" 
-            className="px-4 py-2 rounded-lg transition"
-            style={{ 
-              backgroundColor: "var(--bg-tertiary)", 
-              color: "var(--text-primary)" 
-            }}
+          <button
+            type="button"
+            className="medium secondary"
+            onClick={() => router.push('/')}
           >
             Back to Enrollment
-          </Link>
+          </button>
         </div>
 
         {/* Control & Status Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           
           {/* Status Card */}
-          <div 
-            className="p-6 rounded-xl shadow-sm border"
-            style={{ 
-              backgroundColor: "var(--bg-primary)", 
-              borderColor: "var(--border-primary)" 
-            }}
-          >
+          <div className="card">
             <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
               <Activity className="w-5 h-5" style={{ color: "var(--success-icon)" }} />
               System Status
@@ -252,13 +244,7 @@ export default function PiControlPage() {
           </div>
 
           {/* Command Center */}
-          <div 
-            className="p-6 rounded-xl shadow-sm border"
-            style={{ 
-              backgroundColor: "var(--bg-primary)", 
-              borderColor: "var(--border-primary)" 
-            }}
-          >
+          <div className="card">
             <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
               <Power className="w-5 h-5" style={{ color: "var(--btn-primary)" }} />
               Commands
@@ -267,11 +253,9 @@ export default function PiControlPage() {
               <button
                 onClick={() => sendCommand('single_capture')}
                 disabled={isLoadingCmd}
-                className="flex flex-col items-center justify-center gap-2 p-4 rounded-lg transition border"
+                className="secondary medium flex flex-col items-center justify-center gap-2 border p-4 transition"
                 style={{ 
-                  backgroundColor: "var(--bg-tertiary)", 
-                  borderColor: "var(--border-primary)",
-                  color: "var(--btn-primary)"
+                  borderColor: "var(--border-primary)"
                 }}
               >
                 <Camera className="w-6 h-6" />
@@ -281,11 +265,11 @@ export default function PiControlPage() {
               <button
                 onClick={() => sendCommand('start_continuous')}
                 disabled={isLoadingCmd || status === 'continuous_running'}
-                className="flex flex-col items-center justify-center gap-2 p-4 rounded-lg transition border"
+                className={`medium flex flex-col items-center justify-center gap-2 border p-4 transition ${
+                  status === 'continuous_running' ? 'success' : 'secondary'
+                }`}
                 style={{
-                  backgroundColor: status === 'continuous_running' ? "var(--success-bg)" : "var(--bg-tertiary)",
                   borderColor: status === 'continuous_running' ? "transparent" : "var(--border-primary)",
-                  color: status === 'continuous_running' ? "var(--success-text)" : "var(--btn-success)",
                   cursor: status === 'continuous_running' ? 'default' : 'pointer'
                 }}
               >
@@ -296,11 +280,9 @@ export default function PiControlPage() {
               <button
                 onClick={() => sendCommand('stop')}
                 disabled={isLoadingCmd}
-                className="col-span-2 flex flex-col items-center justify-center gap-2 p-4 rounded-lg transition border"
+                className="danger medium col-span-2 flex flex-col items-center justify-center gap-2 border p-4 transition"
                 style={{ 
-                  backgroundColor: "var(--error-bg)", 
-                  borderColor: "transparent",
-                  color: "var(--error-text)"
+                  borderColor: "transparent"
                 }}
               >
                 <StopCircle className="w-6 h-6" />
@@ -313,11 +295,7 @@ export default function PiControlPage() {
         {/* Live Results */}
         {lastResult && (
           <div 
-            className="p-6 rounded-xl shadow-sm border animate-in fade-in slide-in-from-bottom-4"
-            style={{ 
-              backgroundColor: "var(--bg-primary)", 
-              borderColor: "var(--border-primary)" 
-            }}
+            className="card animate-in fade-in slide-in-from-bottom-4"
           >
             <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
               <Terminal className="w-5 h-5" style={{ color: "var(--text-secondary)" }} />
@@ -325,10 +303,12 @@ export default function PiControlPage() {
             </h2>
             
             <div 
-              className="p-4 rounded-lg font-mono text-sm overflow-x-auto"
+              className="font-mono text-sm overflow-x-auto"
               style={{ 
-                backgroundColor: "var(--bg-dark-secondary)", 
-                color: "var(--text-inverse)" 
+                backgroundColor: "var(--bg-secondary)", 
+                color: "var(--text-primary)",
+                borderRadius: 14,
+                padding: 16
               }}
             >
               {lastResult.speech_text && (
@@ -358,15 +338,9 @@ export default function PiControlPage() {
         )}
 
         {/* Recognition History */}
-        <div 
-          className="p-6 rounded-xl shadow-sm border"
-          style={{ 
-            backgroundColor: "var(--bg-primary)", 
-            borderColor: "var(--border-primary)" 
-          }}
-        >
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-semibold flex items-center gap-2">
+        <div className="card">
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="flex items-center gap-2 text-xl font-semibold">
               <History className="w-5 h-5" style={{ color: "var(--btn-primary)" }} />
               Recognition History (Local)
             </h2>
