@@ -86,16 +86,31 @@ export default function EnrolledListPage() {
     setError(null);
 
     try {
-      const useProxy = process.env.NODE_ENV === "production" || apiUrl.includes("165.227.17.154");
-      const healthUrl = useProxy ? "/api/health" : `${apiUrl}/health`;
+      // Always use the Next.js API route proxy to avoid CORS issues
+      const healthUrl = "/api/health";
       const response = await fetch(healthUrl, { cache: "no-store" });
 
       if (!response.ok) {
         throw new Error(`Server responded with ${response.status}`);
       }
 
-      const data = await response.json();
-      const knownPeople: string[] = data?.known_people || [];
+      const result = await response.json();
+      
+      // The health API route wraps the backend response in a 'data' property
+      // Handle both direct backend response and proxied response
+      const backendData = result?.data || result;
+      const knownPeople: string[] = backendData?.known_people || [];
+      
+      if (result?.success === false) {
+        throw new Error(result?.message || "Failed to fetch enrolled faces");
+      }
+      
+      if (!Array.isArray(knownPeople)) {
+        console.warn("Expected known_people to be an array, got:", typeof knownPeople);
+        setPeople([]);
+        return;
+      }
+      
       setPeople(knownPeople.map(parseIdentifier));
     } catch (err) {
       const message = err instanceof Error ? err.message : "Failed to load enrolled faces";
