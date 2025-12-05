@@ -211,7 +211,7 @@ def psoc_interrupt():
     print("\n⚡ Triggering PSOC capture...")
     update_pi_status("Waiting for trigger")
     
-    trigger = Button(Trigger_GPIO, pull_up=True)
+    trigger = Button(Trigger_GPIO, pull_up=False, bounce_time=0.5)
     trigger.when_pressed = lambda: trigger_received()
 
     try:
