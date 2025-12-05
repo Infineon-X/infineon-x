@@ -1,13 +1,29 @@
 <div align="center">
 
-# **infineon-x**
+<img src="https://upload.wikimedia.org/wikipedia/commons/thumb/b/bb/Infineon-Logo.svg/1200px-Infineon-Logo.svg.png" alt="Infineon Logo" width="110" />
+<!-- <br/> -->
+<img src="https://www.deanza.edu/logo/images/DAC_Logo_Black.png" alt="De Anza College Logo" width="110" />
+<br/>
+<sub><i>Main funding provided by Infineon &amp; De Anza College</i></sub>
+
+# **project infineon-x**
 
 End-to-end facial recognition stack and control surface in one repo. Train models, serve an API, and ship a Next.js dashboard without juggling multiple projects.
 
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white)](backend/requirements.txt)&ensp;
 [![Flask API](https://img.shields.io/badge/Backend-Flask-000000?logo=flask&logoColor=white)](backend/api)&ensp;
 [![Next.js 16](https://img.shields.io/badge/Frontend-Next.js%2016-000000?logo=nextdotjs&logoColor=white)](ix/)&ensp;
-[![Deploy with Docker](https://img.shields.io/badge/Deploy-Docker-2496ED?logo=docker&logoColor=white)](backend/Dockerfile)
+[![Deploy with Docker](https://img.shields.io/badge/Deploy-Docker-2496ED?logo=docker&logoColor=white)](backend/Dockerfile)&ensp;
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)&ensp;
+[![Jupyter Notebook](https://img.shields.io/badge/Jupyter-Notebook-F37626?logo=jupyter&logoColor=white)](https://jupyter.org/)&ensp;
+[![pickle](https://img.shields.io/badge/pickle-Serialization-313131?logo=python&logoColor=white)](https://docs.python.org/3/library/pickle.html)&ensp;
+[![TailwindCSS](https://img.shields.io/badge/TailwindCSS-Ready-06B6D4?logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)&ensp;
+[![Microsoft Edge TTS](https://img.shields.io/badge/Microsoft%20Edge--tts-Speech-0078D7?logo=microsoftedge&logoColor=white)](https://pypi.org/project/edge-tts/)&ensp;
+[![OpenCV](https://img.shields.io/badge/OpenCV-4.x-5C3EE8?logo=opencv&logoColor=white)](https://opencv.org/)
+<br />
+[![Cypress PSoC](https://img.shields.io/badge/Cypress-PSoC-00819D?logo=cypress&logoColor=white)](https://www.infineon.com/cms/en/product/microcontroller/32-bit-arm-cortex-m-microcontroller/psoc-6-cypress/) &ensp;
+[![Raspberry Pi](https://img.shields.io/badge/RaspberryPi-Supported-A22846?logo=raspberrypi&logoColor=white)](https://www.raspberrypi.org/) &ensp;
+[![dlib](https://img.shields.io/badge/dlib-Recognizers-0076B9?logo=python&logoColor=white)](https://github.com/davisking/dlib)
 
 <h3>
 
