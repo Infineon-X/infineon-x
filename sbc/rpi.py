@@ -12,6 +12,20 @@ import cv2
 import requests
 from dotenv import load_dotenv
 
+#GPIO setup
+import RPi.GPIO as GPIO
+Trigger_GPIO = 16
+import signal
+import sys
+
+def signal_handler(sig, frame):
+    GPIO.cleanup()
+    sys.exit(0)
+
+def trigger_received_callback(channel):
+    print("🔔 PSOC Trigger received!")
+    capture_and_recognize()
+
 try:
     import edge_tts  # type: ignore[import]
 except ImportError as edge_tts_error:  # pragma: no cover - handled at runtime
@@ -194,6 +208,27 @@ def capture_and_recognize(max_retries=3, retry_delay=2):
         
     return result
 
+def psoc_interrupt():
+    """Trigger PSOC capture via GPIO"""
+    print("\n⚡ Triggering PSOC capture...")
+    update_pi_status("Waiting for trigger")
+    
+    try:
+        GPIO.setmode(GPIO.BCM)
+        GPIO.setup(Trigger_GPIO, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+        GPIO.add_event_detect(Trigger_GPIO, GPIO.FALLING, 
+            callback=trigger_received_callback, bouncetime=100)
+    
+        signal.signal(signal.SIGINT, signal_handler)
+        signal.pause()
+        
+    except Exception as e:
+        print(f"❌ PSOC trigger error: {e}")
+    finally:
+        GPIO.cleanup()
+    
+    update_pi_status("idle")
+
 def check_command_queue():
     """Poll backend for commands"""
     try:
@@ -226,6 +261,11 @@ def main_loop():
                     continuous_active = False
                     capture_and_recognize()
                     update_pi_status("idle")
+
+                #psoc mode may be exited w/ system interrupt
+                if cmd == 'psoc_capture':
+                    continuous_active = False
+                    psoc_interrupt()
                     
                 elif cmd == 'start_continuous':
                     continuous_active = True
