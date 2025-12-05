@@ -13,16 +13,14 @@ import requests
 from dotenv import load_dotenv
 
 #GPIO setup
-import RPi.GPIO as GPIO
+from gpiozero import Button
+from signal import pause
 Trigger_GPIO = 16
 import signal
 import sys
 
-def signal_handler(sig, frame):
-    GPIO.cleanup()
-    sys.exit(0)
 
-def trigger_received_callback(channel):
+def trigger_received():
     print("🔔 PSOC Trigger received!")
     capture_and_recognize()
 
@@ -213,21 +211,15 @@ def psoc_interrupt():
     print("\n⚡ Triggering PSOC capture...")
     update_pi_status("Waiting for trigger")
     
+    trigger = Button(Trigger_GPIO, pull_up=True)
+    trigger.when_pressed = lambda: trigger_received()
+
     try:
-        GPIO.setmode(GPIO.BCM)
-        GPIO.setup(Trigger_GPIO, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-        GPIO.add_event_detect(Trigger_GPIO, GPIO.FALLING, 
-            callback=trigger_received_callback, bouncetime=100)
-    
-        signal.signal(signal.SIGINT, signal_handler)
-        signal.pause()
-        
-    except Exception as e:
-        print(f"❌ PSOC trigger error: {e}")
+        pause()
     finally:
-        GPIO.cleanup()
-    
-    update_pi_status("idle")
+        trigger.close()
+        update_pi_status("idle")
+        
 
 def check_command_queue():
     """Poll backend for commands"""
@@ -263,7 +255,7 @@ def main_loop():
                     update_pi_status("idle")
 
                 #psoc mode may be exited w/ system interrupt
-                if cmd == 'psoc_capture':
+                elif cmd == 'psoc_capture':
                     continuous_active = False
                     psoc_interrupt()
                     
