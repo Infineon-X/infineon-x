@@ -30,6 +30,7 @@ End-to-end facial recognition stack and control surface in one repo. Train model
 - Inky 
 
 
+
 ## Repo Highlights
 
 - **Two-track monorepo** – `backend/` handles model training + inference; `ix/` ships the React 19 dashboard scaffold.
