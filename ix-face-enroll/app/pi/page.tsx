@@ -319,9 +319,21 @@ export default function PiControlPage() {
               </button>
 
               <button
+                onClick={() => sendCommand('psoc_capture')}
+                disabled={isLoadingCmd}
+                className="secondary medium flex flex-col items-center justify-center gap-2 border p-4 transition"
+                style={{ 
+                  borderColor: "var(--border-primary)"
+                }}
+              >
+                <Camera className="w-6 h-6" />
+                <span className="font-medium">PSOC Capture</span>
+              </button>
+
+              <button
                 onClick={() => sendCommand('stop')}
                 disabled={isLoadingCmd}
-                className="danger medium col-span-2 flex flex-col items-center justify-center gap-2 border p-4 transition"
+                className="danger medium flex flex-col items-center justify-center gap-2 border p-4 transition"
                 style={{ 
                   borderColor: "transparent"
                 }}
