@@ -2,7 +2,7 @@
 
 <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/b/bb/Infineon-Logo.svg/1200px-Infineon-Logo.svg.png" alt="Infineon Logo" width="110" />
 <!-- <br/> -->
-<img src="https://www.deanza.edu/logo/images/DAC_Logo_Black.png" alt="De Anza College Logo" width="110" />
+<img src="https://upload.wikimedia.org/wikipedia/commons/thumb/b/be/De_Anza_College_logo.svg/1024px-De_Anza_College_logo.svg.png" alt="De Anza College Logo" width="110" />
 <br/>
 <sub><i>main funding provided by infineon & de anza college</i></sub>
 
