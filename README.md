@@ -41,6 +41,8 @@ end-to-end facial recognition stack and control surface in one repo. train model
 - **api first** – flask rest service plus cli utilities for single-shot, health, and continuous recognition.
 - **frontend friendly** – modern next.js (app router) starter ready to integrate live recognition results.
 
+<img width="3840" height="2486" alt="image" src="https://github.com/user-attachments/assets/f2f96724-158b-490c-8e7e-f15b487f431d" />
+
 ## quick start
 
 ### `backend/` (face recognition stack)
