@@ -19,25 +19,6 @@ end-to-end facial recognition stack and control surface in one repo. train model
 
 </h3>
 
-<!-- Centered Badges -->
-<div align="center">
-
-[![python 3.10+](https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white)](backend/requirements.txt)&ensp;
-[![flask api](https://img.shields.io/badge/Backend-Flask-000000?logo=flask&logoColor=white)](backend/api)&ensp;
-[![next.js 16](https://img.shields.io/badge/Frontend-Next.js%2016-000000?logo=nextdotjs&logoColor=white)](ix/)&ensp;
-[![deploy with docker](https://img.shields.io/badge/Deploy-Docker-2496ED?logo=docker&logoColor=white)](backend/Dockerfile)&ensp;
-[![typescript](https://img.shields.io/badge/TypeScript-5.0+-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)&ensp;
-[![jupyter notebook](https://img.shields.io/badge/Jupyter-Notebook-F37626?logo=jupyter&logoColor=white)](https://jupyter.org/)&ensp;
-[![pickle](https://img.shields.io/badge/pickle-Serialization-313131?logo=python&logoColor=white)](https://docs.python.org/3/library/pickle.html)&ensp;
-[![tailwindcss](https://img.shields.io/badge/TailwindCSS-Ready-06B6D4?logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)&ensp;
-[![microsoft edge tts](https://img.shields.io/badge/Microsoft%20Edge--tts-Speech-0078D7?logo=microsoftedge&logoColor=white)](https://pypi.org/project/edge-tts/)&ensp;
-[![opencv](https://img.shields.io/badge/OpenCV-4.x-5C3EE8?logo=opencv&logoColor=white)](https://opencv.org/)
-<br />
-[![cypress psoc](https://img.shields.io/badge/Cypress-PSoC-00819D?logo=cypress&logoColor=white)](https://www.infineon.com/cms/en/product/microcontroller/32-bit-arm-cortex-m-microcontroller/psoc-6-cypress/) &ensp;
-[![raspberry pi](https://img.shields.io/badge/RaspberryPi-Supported-A22846?logo=raspberrypi&logoColor=white)](https://www.raspberrypi.org/) &ensp;
-[![dlib](https://img.shields.io/badge/dlib-Recognizers-0076B9?logo=python&logoColor=white)](https://github.com/davisking/dlib)
-
-</div>
 <!-- End Centered Badges -->
 
 </div>
@@ -159,3 +140,25 @@ pnpm dev
 - package the backend with the provided dockerfile or integrate with ci/cd.
 
 <!-- Badges moved above for center alignment -->
+
+
+
+<!-- Centered Badges -->
+<div align="center">
+
+[![python 3.10+](https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white)](backend/requirements.txt)&ensp;
+[![flask api](https://img.shields.io/badge/Backend-Flask-000000?logo=flask&logoColor=white)](backend/api)&ensp;
+[![next.js 16](https://img.shields.io/badge/Frontend-Next.js%2016-000000?logo=nextdotjs&logoColor=white)](ix/)&ensp;
+[![deploy with docker](https://img.shields.io/badge/Deploy-Docker-2496ED?logo=docker&logoColor=white)](backend/Dockerfile)&ensp;
+[![typescript](https://img.shields.io/badge/TypeScript-5.0+-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)&ensp;
+[![jupyter notebook](https://img.shields.io/badge/Jupyter-Notebook-F37626?logo=jupyter&logoColor=white)](https://jupyter.org/)&ensp;
+[![pickle](https://img.shields.io/badge/pickle-Serialization-313131?logo=python&logoColor=white)](https://docs.python.org/3/library/pickle.html)&ensp;
+[![tailwindcss](https://img.shields.io/badge/TailwindCSS-Ready-06B6D4?logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)&ensp;
+[![microsoft edge tts](https://img.shields.io/badge/Microsoft%20Edge--tts-Speech-0078D7?logo=microsoftedge&logoColor=white)](https://pypi.org/project/edge-tts/)&ensp;
+[![opencv](https://img.shields.io/badge/OpenCV-4.x-5C3EE8?logo=opencv&logoColor=white)](https://opencv.org/)
+<br />
+[![cypress psoc](https://img.shields.io/badge/Cypress-PSoC-00819D?logo=cypress&logoColor=white)](https://www.infineon.com/cms/en/product/microcontroller/32-bit-arm-cortex-m-microcontroller/psoc-6-cypress/) &ensp;
+[![raspberry pi](https://img.shields.io/badge/RaspberryPi-Supported-A22846?logo=raspberrypi&logoColor=white)](https://www.raspberrypi.org/) &ensp;
+[![dlib](https://img.shields.io/badge/dlib-Recognizers-0076B9?logo=python&logoColor=white)](https://github.com/davisking/dlib)
+
+</div>
