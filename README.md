@@ -119,6 +119,14 @@ pnpm dev
   pnpm lint
   ```
 
+
+<img width="200" height="2868" alt="Simulator Screenshot - iPhone 17 Pro Max - 2025-12-06 at 00 23 59" src="https://github.com/user-attachments/assets/48a39e16-de69-4a3a-8d9e-1c76745adc2d" />
+<img width="200" height="2868" alt="Simulator Screenshot - iPhone 17 Pro Max - 2025-12-06 at 00 24 16" src="https://github.com/user-attachments/assets/85800a9f-5d06-4da3-bfbc-aa423e2302c7" />
+<img width="200" height="2868" alt="Simulator Screenshot - iPhone 17 Pro Max - 2025-12-06 at 00 24 21" src="https://github.com/user-attachments/assets/2cd25906-2878-4468-af97-63fc06058982" />
+<img width="200" height="2868" alt="Simulator Screenshot - iPhone 17 Pro Max - 2025-12-06 at 00 24 26" src="https://github.com/user-attachments/assets/1ac8340d-208b-4804-968d-51ba1b4832a3" />
+
+  
+
 ## repo layout
 
 | path | description |
