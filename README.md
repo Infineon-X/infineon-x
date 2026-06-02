@@ -1,8 +1,9 @@
 <div align="center">
-
-<img src="https://upload.wikimedia.org/wikipedia/commons/thumb/b/bb/Infineon-Logo.svg/1200px-Infineon-Logo.svg.png" alt="Infineon Logo" width="110" />
+   
+<img width="110" height="110" alt="1280px-Infineon-Logo svg-1194558966" src="https://github.com/user-attachments/assets/c51b416b-112b-4871-b059-4e034856b157" />
 <!-- <br/> -->
-<img src="https://upload.wikimedia.org/wikipedia/commons/thumb/b/be/De_Anza_College_logo.svg/1024px-De_Anza_College_logo.svg.png" alt="De Anza College Logo" width="110" />
+<img width="110" height="110" alt="DAC_Logo_Black-1465435675" src="https://github.com/user-attachments/assets/c77f0c02-e047-4769-836e-961e8d761221" />
+
 <br/>
 <sub><i>main funding provided by infineon & de anza college</i></sub>
 
@@ -121,13 +122,14 @@ pnpm dev
   pnpm lint
   ```
 
-
-<img width="200" height="2868" alt="Simulator Screenshot - iPhone 17 Pro Max - 2025-12-06 at 00 23 59" src="https://github.com/user-attachments/assets/48a39e16-de69-4a3a-8d9e-1c76745adc2d" />
-<img width="200" height="2868" alt="Simulator Screenshot - iPhone 17 Pro Max - 2025-12-06 at 00 24 16" src="https://github.com/user-attachments/assets/85800a9f-5d06-4da3-bfbc-aa423e2302c7" />
-<img width="200" height="2868" alt="Simulator Screenshot - iPhone 17 Pro Max - 2025-12-06 at 00 24 21" src="https://github.com/user-attachments/assets/2cd25906-2878-4468-af97-63fc06058982" />
-<img width="200" height="2868" alt="Simulator Screenshot - iPhone 17 Pro Max - 2025-12-06 at 00 24 26" src="https://github.com/user-attachments/assets/1ac8340d-208b-4804-968d-51ba1b4832a3" />
-
   
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/48a39e16-de69-4a3a-8d9e-1c76745adc2d" width="22%" alt="Simulator Screenshot 1" />
+  <img src="https://github.com/user-attachments/assets/85800a9f-5d06-4da3-bfbc-aa423e2302c7" width="22%" alt="Simulator Screenshot 2" />
+  <img src="https://github.com/user-attachments/assets/2cd25906-2878-4468-af97-63fc06058982" width="22%" alt="Simulator Screenshot 3" />
+  <img src="https://github.com/user-attachments/assets/1ac8340d-208b-4804-968d-51ba1b4832a3" width="22%" alt="Simulator Screenshot 4" />
+</p>
+
 
 ## repo layout
 
