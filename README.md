@@ -1,8 +1,8 @@
 <div align="center">
    
-<img width="110" height="110" alt="1280px-Infineon-Logo svg-1194558966" src="https://github.com/user-attachments/assets/c51b416b-112b-4871-b059-4e034856b157" />
+<img width="110" height="66" alt="1280px-Infineon-Logo svg-1194558966" src="https://github.com/user-attachments/assets/c51b416b-112b-4871-b059-4e034856b157" />
 <!-- <br/> -->
-<img width="110" height="110" alt="DAC_Logo_Black-1465435675" src="https://github.com/user-attachments/assets/c77f0c02-e047-4769-836e-961e8d761221" />
+<img width="110" height="66" alt="DAC_Logo_Black-1465435675" src="https://github.com/user-attachments/assets/c77f0c02-e047-4769-836e-961e8d761221" />
 
 <br/>
 <sub><i>main funding provided by infineon & de anza college</i></sub>
